@@ -133,7 +133,7 @@
         top: 10px;
         right: 180px;
         left: auto;
-        z-index: 2147483645;
+        z-index: 1;
         height: 32px;
         color: #d1d5db;
         font: 14px system-ui, sans-serif;
