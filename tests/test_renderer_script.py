@@ -182,7 +182,7 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
     assert "updateDeleteButtonOffsets" in text
-    assert "codexDeleteStyleVersion = \"7\"" in text
+    assert "codexDeleteStyleVersion = \"10\"" in text
     assert "right: 66px" in text
     assert "确认" in text
     assert "归档对话" in text
@@ -192,6 +192,12 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
     assert "codex-delete-button-fallback" in text
     assert "archiveConfirmButtonForRow" not in text
     assert "syncDeleteButtonStyle" not in text
+    assert "syncDeleteButtonMetrics" not in text
+    assert "window.getComputedStyle(confirmButton)" not in text
+    assert "min-width: 72px" in text
+    assert "height: 36px" in text
+    assert "padding: 8px 14px" in text
+    assert "font-weight: 500" in text
 
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
@@ -313,6 +319,8 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert "left: auto" in text
     assert "pointer-events: auto" in text
     assert "-webkit-app-region: no-drag" in text
+    assert "align-self: center" in text
+    assert "margin: 0 6px 0 2px" in text
     assert ".codex-plus-trigger" in text
     assert ".codex-plus-trigger-native" in text
     assert ".codex-plus-trigger-macos" in text
@@ -322,6 +330,7 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert "color: rgba(31,41,55,.72)" in text
     assert "background: rgba(15,23,42,.06)" in text
     assert "color: rgba(17,24,39,.92)" in text
+    assert "top: -1px" in text
     assert "app-header-tint" in text
     assert "flex items-center gap-0.5" in text
     assert "codex-plus-menu-floating" in text
@@ -334,5 +343,6 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert "codexPlusMenuVersion = \"5\"" in text
     assert "codexPlusTriggerInstalled = \"5\"" in text
     assert "buttons[0]" in text
+    assert "const inheritedClassName = isMacPlatform() ? \"\" : nativeButtonClass" in text
     assert "isMacPlatform() ? \"codex-plus-trigger-macos\" : \"\"" in text
     assert ".codex-plus-trigger:hover" not in text

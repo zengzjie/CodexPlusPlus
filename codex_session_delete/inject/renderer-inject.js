@@ -2,7 +2,7 @@
   const helperBase = window.__CODEX_SESSION_DELETE_HELPER__ || "http://127.0.0.1:57321";
   const buttonClass = "codex-delete-button";
   const styleId = "codex-delete-style";
-  const codexDeleteStyleVersion = "7";
+  const codexDeleteStyleVersion = "10";
   const codexPlusMenuId = "codex-plus-menu";
   const codexDeleteVersion = "5";
   const codexArchiveDeleteAllVersion = "2";
@@ -40,9 +40,17 @@
         border-radius: 999px;
         background: #fde8e8;
         color: #dc2626;
-        font: 13px system-ui, sans-serif;
-        line-height: 20px;
-        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        font-family: system-ui, sans-serif;
+        line-height: 18px;
+        height: 36px;
+        min-width: 72px;
+        padding: 8px 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
       }
       [data-codex-delete-row="true"]:hover .${buttonClass} { opacity: 1; }
       [data-codex-delete-row="true"].codex-archive-confirm-visible .${buttonClass} { right: 66px; }
@@ -132,8 +140,10 @@
       #${codexPlusMenuId} {
         display: inline-flex;
         align-items: center;
-        height: 100%;
+        align-self: center;
+        height: auto;
         flex: 0 0 auto;
+        margin: 0 6px 0 2px;
         pointer-events: auto;
         -webkit-app-region: no-drag;
       }
@@ -171,6 +181,8 @@
         padding: 0;
         border-radius: 999px;
         color: rgba(31,41,55,.72);
+        position: relative;
+        top: -1px;
       }
       .codex-plus-trigger-macos:hover {
         background: rgba(15,23,42,.06);
@@ -359,8 +371,9 @@
 
   function configureCodexPlusTrigger(menu, trigger, nativeButtonClass) {
     if (!trigger) return;
+    const inheritedClassName = isMacPlatform() ? "" : nativeButtonClass;
     trigger.className = [
-      nativeButtonClass,
+      inheritedClassName,
       "codex-plus-trigger",
       "codex-plus-trigger-native",
       isMacPlatform() ? "codex-plus-trigger-macos" : "",
