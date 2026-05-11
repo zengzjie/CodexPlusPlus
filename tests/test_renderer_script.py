@@ -196,8 +196,6 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
     assert "window.getComputedStyle(confirmButton)" not in text
     assert "color: #d04a3f" in text
     assert "padding: 2px 8px" in text
-    assert "font-weight: 500" in text
-
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
     archive_visible_start = text.index("function archivedPageVisible")

@@ -47,7 +47,6 @@
         background: #fde8e8;
         color: #d04a3f;
         font-size: 13px;
-        font-weight: 500;
         font-family: system-ui, sans-serif;
         line-height: 18px;
         padding: 2px 8px;
