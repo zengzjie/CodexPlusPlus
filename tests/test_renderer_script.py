@@ -149,6 +149,10 @@ def test_renderer_script_uses_in_page_confirm_and_stops_early_pointer_events():
     assert "confirm(" not in text
     assert "codex-delete-confirm-overlay" in text
     assert "escapeHtml(title)" in text
+    assert "确认删除“${escapeHtml(title)}”？" in text
+    assert "cursor: pointer" in text
+    assert ".codex-delete-confirm-actions [data-codex-delete-confirm=\"true\"]" in text
+    assert "color: white;" in text
     assert "stopImmediatePropagation" in text
     assert "\"pointerdown\", \"mousedown\", \"mouseup\", \"touchstart\"" in text
 

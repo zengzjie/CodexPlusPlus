@@ -121,8 +121,10 @@
         background: #ffffff;
         color: #111827;
         font: 13px system-ui, sans-serif;
+        cursor: pointer;
       }
       .codex-delete-confirm-actions [data-codex-delete-confirm="true"] {
+        color: white;
         border-color: #ef4444;
         background: #dc2626;
       }
@@ -764,7 +766,7 @@
       overlay.innerHTML = `
         <div class="codex-delete-confirm-content" role="dialog" aria-modal="true" aria-label="删除会话">
           <div class="codex-delete-confirm-title">删除会话</div>
-          <div class="codex-delete-confirm-message">删除“${escapeHtml(title)}”？</div>
+          <div class="codex-delete-confirm-message">确认删除“${escapeHtml(title)}”？</div>
           <div class="codex-delete-confirm-actions">
             <button type="button" data-codex-delete-cancel="true">取消</button>
             <button type="button" data-codex-delete-confirm="true">删除</button>
