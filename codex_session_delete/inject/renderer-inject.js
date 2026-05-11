@@ -115,7 +115,7 @@
         margin-top: 18px;
       }
       .codex-delete-confirm-actions button {
-        border: 1px solid #d1d5db;
+        border: 1px solid #d9d9d9;
         border-radius: 7px;
         padding: 6px 12px;
         background: #ffffff;
