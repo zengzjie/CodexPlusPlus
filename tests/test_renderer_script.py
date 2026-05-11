@@ -290,9 +290,9 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert 'trigger.setAttribute("aria-label", "Codex++")' in text
     assert 'trigger.setAttribute("title", "Codex++")' in text
     assert "codex-plus-trigger-icon" in text
-    assert 'rect x="4" y="4" width="12" height="12" rx="3.25"' in text
-    assert 'path d="M10 7.1V12.9"' in text
-    assert 'path d="M7.1 10H12.9"' in text
+    assert 'viewBox="-7.2 -7.2 38.40 38.40"' in text
+    assert 'stroke="#999999"' in text
+    assert 'd="M8 12H8.00901M12.0045 12H12.0135M15.991 12H16"' in text
     assert "提出问题" in text
     assert "https://github.com/BigPizzaV3/CodexPlusPlus/issues" in text
     assert "window.open(issueUrl, \"_blank\")" in text
@@ -316,13 +316,14 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert "codex-plus-menu-floating" in text
     assert "findNativeMenuInsertionPoint" in text
     assert "if (!codexPlusSettings().nativeMenuPlacement) return null" in text
-    assert "top: 14px" in text
-    assert "right: 188px" in text
+    assert "top: 10px" in text
+    assert "right: 180px" in text
     assert "left: auto" in text
     assert "pointer-events: auto" in text
     assert "-webkit-app-region: no-drag" in text
     assert "align-self: center" in text
     assert "margin: 0 6px 0 2px" in text
+    assert "font: 14px system-ui, sans-serif" in text
     assert ".codex-plus-trigger" in text
     assert ".codex-plus-trigger-native" in text
     assert ".codex-plus-trigger-macos" in text
@@ -330,9 +331,15 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert "stroke-linecap: round" in text
     assert "stroke-linejoin: round" in text
     assert "color: rgba(31,41,55,.72)" in text
-    assert "background: rgba(15,23,42,.06)" in text
-    assert "color: rgba(17,24,39,.92)" in text
+    assert "background: #f7f7f7" in text
     assert "top: -1px" in text
+    assert "border-radius: 8px" in text
+    assert "width: 28px" in text
+    assert "min-width: 28px" in text
+    assert "padding: 0" in text
+    assert "width: 32px" not in text
+    assert "min-width: 32px" not in text
+    assert ".codex-plus-trigger-macos:hover" not in text
     assert "app-header-tint" in text
     assert "flex items-center gap-0.5" in text
     assert "codex-plus-menu-floating" in text

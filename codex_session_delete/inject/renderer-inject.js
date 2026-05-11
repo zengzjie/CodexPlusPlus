@@ -128,13 +128,13 @@
       }
       #${codexPlusMenuId}.codex-plus-menu-floating {
         position: fixed;
-        top: 14px;
-        right: 188px;
+        top: 10px;
+        right: 180px;
         left: auto;
         z-index: 2147483645;
         height: 32px;
         color: #d1d5db;
-        font: 13px system-ui, sans-serif;
+        font: 14px system-ui, sans-serif;
         text-align: right;
         pointer-events: auto;
         -webkit-app-region: no-drag;
@@ -164,16 +164,13 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        min-width: 32px;
-        padding: 0;
         border-radius: 10px;
         color: inherit;
         opacity: .92;
         transition: background-color .12s ease, opacity .12s ease;
       }
       .codex-plus-trigger-native:hover {
-        background: rgba(255,255,255,.08);
+        background: #f7f7f7;
         opacity: 1;
       }
       .codex-plus-trigger-macos {
@@ -181,14 +178,10 @@
         width: 28px;
         min-width: 28px;
         padding: 0;
-        border-radius: 999px;
+        border-radius: 8px;
         color: rgba(31,41,55,.72);
         position: relative;
         top: -1px;
-      }
-      .codex-plus-trigger-macos:hover {
-        background: rgba(15,23,42,.06);
-        color: rgba(17,24,39,.92);
       }
       .codex-plus-trigger-icon {
         width: 16px;
@@ -463,12 +456,7 @@
     trigger.setAttribute("aria-label", "Codex++");
     trigger.setAttribute("title", "Codex++");
     trigger.innerHTML = `
-      <svg class="codex-plus-trigger-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <rect x="4" y="4" width="12" height="12" rx="3.25" stroke="currentColor" stroke-width="1.6"></rect>
-        <path d="M10 7.1V12.9" stroke="currentColor" stroke-width="1.6"></path>
-        <path d="M7.1 10H12.9" stroke="currentColor" stroke-width="1.6"></path>
-        <path d="M6.2 2.8H13.8" stroke="currentColor" stroke-width="1.6" opacity=".7"></path>
-      </svg>
+      <svg viewBox="-7.2 -7.2 38.40 38.40" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M8 12H8.00901M12.0045 12H12.0135M15.991 12H16" stroke="#999999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" stroke="#999999" stroke-width="1.5"></path> </g></svg>
     `;
     const nativeButtonClass =
       insertionPoint?.nativeButtonClass || "codex-plus-trigger";
