@@ -2,7 +2,7 @@
   const helperBase = window.__CODEX_SESSION_DELETE_HELPER__ || "http://127.0.0.1:57321";
   const buttonClass = "codex-delete-button";
   const styleId = "codex-delete-style";
-  const codexDeleteStyleVersion = "10";
+  const codexDeleteStyleVersion = "11";
   const codexPlusMenuId = "codex-plus-menu";
   const codexDeleteVersion = "5";
   const codexArchiveDeleteAllVersion = "2";
@@ -44,9 +44,7 @@
         font-weight: 500;
         font-family: system-ui, sans-serif;
         line-height: 18px;
-        height: 36px;
-        min-width: 72px;
-        padding: 8px 14px;
+        padding: 2px 4px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
