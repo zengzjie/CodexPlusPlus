@@ -2,12 +2,20 @@
   const helperBase = window.__CODEX_SESSION_DELETE_HELPER__ || "http://127.0.0.1:57321";
   const buttonClass = "codex-delete-button";
   const styleId = "codex-delete-style";
-  const codexDeleteStyleVersion = "4";
+  const codexDeleteStyleVersion = "5";
   const codexPlusMenuId = "codex-plus-menu";
   const codexDeleteVersion = "5";
   const codexArchiveDeleteAllVersion = "2";
   const codexPlusVersion = "1.0.4";
   const codexPlusSettingsKey = "codexPlusSettings";
+
+  function isMacPlatform() {
+    try {
+      return /mac/i.test(navigator.userAgentData?.platform || navigator.platform || "");
+    } catch {
+      return false;
+    }
+  }
 
   function installStyle() {
     const existingStyle = document.getElementById(styleId);
@@ -24,13 +32,13 @@
         transform: translateY(-50%);
         z-index: 20;
         opacity: 0;
-        border: 1px solid #ef4444;
-        border-radius: 6px;
-        background: #fee2e2;
-        color: #991b1b;
-        font-size: 12px;
-        line-height: 16px;
-        padding: 1px 6px;
+        border: 0;
+        border-radius: 999px;
+        background: #fde8e8;
+        color: #dc2626;
+        font: 13px system-ui, sans-serif;
+        line-height: 20px;
+        padding: 6px 12px;
         cursor: pointer;
       }
       [data-codex-delete-row="true"]:hover .${buttonClass} { opacity: 1; }
@@ -107,11 +115,11 @@
       }
       #${codexPlusMenuId}.codex-plus-menu-floating {
         position: fixed;
-        top: 0;
-        right: 140px;
+        top: 14px;
+        right: 188px;
         left: auto;
         z-index: 2147483645;
-        height: 30px;
+        height: 32px;
         color: #d1d5db;
         font: 13px system-ui, sans-serif;
         text-align: right;
@@ -136,6 +144,42 @@
         cursor: pointer;
         pointer-events: auto;
         -webkit-app-region: no-drag;
+      }
+      .codex-plus-trigger-native {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        min-width: 32px;
+        padding: 0;
+        border-radius: 10px;
+        color: inherit;
+        opacity: .92;
+        transition: background-color .12s ease, opacity .12s ease;
+      }
+      .codex-plus-trigger-native:hover {
+        background: rgba(255,255,255,.08);
+        opacity: 1;
+      }
+      .codex-plus-trigger-macos {
+        height: 28px;
+        width: 28px;
+        min-width: 28px;
+        padding: 0;
+        border-radius: 999px;
+        color: rgba(255,255,255,.76);
+      }
+      .codex-plus-trigger-macos:hover {
+        background: rgba(255,255,255,.06);
+        color: rgba(255,255,255,.92);
+      }
+      .codex-plus-trigger-icon {
+        width: 16px;
+        height: 16px;
+        display: block;
+        flex: 0 0 auto;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .codex-plus-modal-overlay {
         position: fixed;
@@ -294,7 +338,8 @@
     const menuBar = header?.querySelector(".flex.items-center.gap-0\\.5") || header?.querySelector('[class*="flex items-center gap-0.5"]');
     if (!menuBar) return null;
     const buttons = Array.from(menuBar.querySelectorAll("button")).filter((button) => !button.closest(`#${codexPlusMenuId}`));
-    return { parent: menuBar, before: buttons[buttons.length - 1]?.nextSibling || null, nativeButtonClass: buttons[buttons.length - 1]?.className || "" };
+    const firstButton = buttons[0] || null;
+    return { parent: menuBar, before: firstButton, nativeButtonClass: firstButton?.className || "" };
   }
 
   function removeDuplicateCodexPlusMenus(keep) {
@@ -302,7 +347,8 @@
       if (node !== keep) node.remove();
     });
     Array.from(document.querySelectorAll("button")).forEach((button) => {
-      if ((button.textContent || "").trim() === `Codex++ ${codexPlusVersion}` && !button.closest(`#${codexPlusMenuId}`)) {
+      const label = (button.getAttribute("aria-label") || button.getAttribute("title") || button.textContent || "").trim();
+      if ((label === "Codex++" || label === `Codex++ ${codexPlusVersion}`) && !button.closest(`#${codexPlusMenuId}`)) {
         button.remove();
       }
     });
@@ -310,7 +356,12 @@
 
   function configureCodexPlusTrigger(menu, trigger, nativeButtonClass) {
     if (!trigger) return;
-    if (nativeButtonClass) trigger.className = nativeButtonClass;
+    trigger.className = [
+      nativeButtonClass,
+      "codex-plus-trigger",
+      "codex-plus-trigger-native",
+      isMacPlatform() ? "codex-plus-trigger-macos" : "",
+    ].filter(Boolean).join(" ");
     if (trigger.dataset.codexPlusTriggerInstalled === "5") return;
     trigger.dataset.codexPlusTriggerInstalled = "5";
     trigger.addEventListener("click", (event) => {
@@ -338,7 +389,16 @@
     menu.dataset.codexPlusMenuVersion = "5";
     const trigger = document.createElement("button");
     trigger.type = "button";
-    trigger.textContent = `Codex++ ${codexPlusVersion}`;
+    trigger.setAttribute("aria-label", "Codex++");
+    trigger.setAttribute("title", "Codex++");
+    trigger.innerHTML = `
+      <svg class="codex-plus-trigger-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <rect x="4" y="4" width="12" height="12" rx="3.25" stroke="currentColor" stroke-width="1.6"></rect>
+        <path d="M10 7.1V12.9" stroke="currentColor" stroke-width="1.6"></path>
+        <path d="M7.1 10H12.9" stroke="currentColor" stroke-width="1.6"></path>
+        <path d="M6.2 2.8H13.8" stroke="currentColor" stroke-width="1.6" opacity=".7"></path>
+      </svg>
+    `;
     const nativeButtonClass = insertionPoint?.nativeButtonClass || "codex-plus-trigger";
     configureCodexPlusTrigger(menu, trigger, nativeButtonClass);
     menu.appendChild(trigger);
@@ -386,7 +446,7 @@
       .find((node) => node.nodeType === 3 && /^(插件|Plugins)( - 已解锁| - Unlocked)?$/i.test((node.nodeValue || "").trim()));
     if (!labelTextNode) return;
     const current = (labelTextNode.nodeValue || "").trim();
-    labelTextNode.nodeValue = /^Plugins/i.test(current) ? "Plugins - Unlocked" : "插件 - 已解锁";
+    labelTextNode.nodeValue = /^Plugins/i.test(current) ? "Plugins" : "插件";
   }
 
   function enablePluginEntry() {

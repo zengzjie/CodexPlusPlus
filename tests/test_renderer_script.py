@@ -54,8 +54,7 @@ def test_renderer_script_enables_plugin_entry_for_api_key_users():
     assert "disabled = false" in plugin_entry_code
     assert "removeAttribute(\"disabled\")" in plugin_entry_code
     assert "setAuthMethod(\"chatgpt\")" in text
-    assert "插件 - 已解锁" in plugin_entry_code
-    assert "Plugins - Unlocked" in plugin_entry_code
+    assert '"Plugins" : "插件"' in plugin_entry_code
     assert "labelUnlockedPluginEntry" in plugin_entry_code
     assert "childNodes" in plugin_entry_code
     assert "node.nodeType === 3" in plugin_entry_code
@@ -183,12 +182,15 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
     assert "updateDeleteButtonOffsets" in text
-    assert "codexDeleteStyleVersion = \"4\"" in text
+    assert "codexDeleteStyleVersion = \"5\"" in text
     assert "right: 66px" in text
     assert "确认" in text
     assert "归档对话" in text
     assert "button.getAttribute(\"aria-label\")" in text
     assert "label === \"归档对话\"" in text
+    assert "border-radius: 999px" in text
+    assert "background: #fde8e8" in text
+    assert "color: #dc2626" in text
 
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
@@ -272,7 +274,16 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert "patchFastModeGateOnObject" not in text
     assert "Codex++" in text
     assert "codexPlusVersion = \"1.0.4\"" in text
+    assert "function isMacPlatform()" in text
+    assert "navigator.userAgentData?.platform" in text
+    assert "navigator.platform" in text
     assert "Codex++ ${codexPlusVersion}" in text
+    assert 'trigger.setAttribute("aria-label", "Codex++")' in text
+    assert 'trigger.setAttribute("title", "Codex++")' in text
+    assert "codex-plus-trigger-icon" in text
+    assert 'rect x="4" y="4" width="12" height="12" rx="3.25"' in text
+    assert 'path d="M10 7.1V12.9"' in text
+    assert 'path d="M7.1 10H12.9"' in text
     assert "提出问题" in text
     assert "https://github.com/BigPizzaV3/CodexPlusPlus/issues" in text
     assert "window.open(issueUrl, \"_blank\")" in text
@@ -296,18 +307,28 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert "codex-plus-menu-floating" in text
     assert "findNativeMenuInsertionPoint" in text
     assert "if (!codexPlusSettings().nativeMenuPlacement) return null" in text
-    assert "right: 140px" in text
+    assert "top: 14px" in text
+    assert "right: 188px" in text
     assert "left: auto" in text
     assert "pointer-events: auto" in text
     assert "-webkit-app-region: no-drag" in text
     assert ".codex-plus-trigger" in text
+    assert ".codex-plus-trigger-native" in text
+    assert ".codex-plus-trigger-macos" in text
+    assert ".codex-plus-trigger-icon" in text
+    assert "stroke-linecap: round" in text
+    assert "stroke-linejoin: round" in text
     assert "app-header-tint" in text
     assert "flex items-center gap-0.5" in text
     assert "codex-plus-menu-floating" in text
     assert "nativeButtonClass" in text
     assert "removeDuplicateCodexPlusMenus" in text
     assert "data-codex-plus-menu" in text
-    assert "textContent || \"\").trim() === `Codex++ ${codexPlusVersion}`" in text
+    assert "getAttribute(\"aria-label\")" in text
+    assert "getAttribute(\"title\")" in text
+    assert "label === \"Codex++\"" in text
     assert "codexPlusMenuVersion = \"5\"" in text
     assert "codexPlusTriggerInstalled = \"5\"" in text
+    assert "buttons[0]" in text
+    assert "isMacPlatform() ? \"codex-plus-trigger-macos\" : \"\"" in text
     assert ".codex-plus-trigger:hover" not in text
