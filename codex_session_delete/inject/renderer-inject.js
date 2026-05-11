@@ -1,5 +1,6 @@
 (() => {
-  const helperBase = window.__CODEX_SESSION_DELETE_HELPER__ || "http://127.0.0.1:57321";
+  const helperBase =
+    window.__CODEX_SESSION_DELETE_HELPER__ || "http://127.0.0.1:57321";
   const buttonClass = "codex-delete-button";
   const styleId = "codex-delete-style";
   const codexDeleteStyleVersion = "11";
@@ -12,7 +13,9 @@
 
   function isMacPlatform() {
     try {
-      return /mac/i.test(navigator.userAgentData?.platform || navigator.platform || "");
+      return /mac/i.test(
+        navigator.userAgentData?.platform || navigator.platform || "",
+      );
     } catch {
       return false;
     }
@@ -20,7 +23,10 @@
 
   function installStyle() {
     const existingStyle = document.getElementById(styleId);
-    if (existingStyle?.dataset.codexDeleteStyleVersion === codexDeleteStyleVersion) return;
+    if (
+      existingStyle?.dataset.codexDeleteStyleVersion === codexDeleteStyleVersion
+    )
+      return;
     existingStyle?.remove();
     const style = document.createElement("style");
     style.id = styleId;
@@ -39,12 +45,12 @@
         border: 0;
         border-radius: 999px;
         background: #fde8e8;
-        color: #dc2626;
+        color: #d04a3f;
         font-size: 13px;
         font-weight: 500;
         font-family: system-ui, sans-serif;
         line-height: 18px;
-        padding: 2px 4px;
+        padding: 2px 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -53,13 +59,12 @@
       [data-codex-delete-row="true"]:hover .${buttonClass} { opacity: 1; }
       [data-codex-delete-row="true"].codex-archive-confirm-visible .${buttonClass} { right: 66px; }
       .codex-archive-delete-all {
-        border: 1px solid #ef4444;
         border-radius: 7px;
-        background: #fee2e2;
-        color: #991b1b;
+        background: #fde8e8;
+        color: #d04a3f;
         font: 12px system-ui, sans-serif;
         line-height: 16px;
-        padding: 3px 8px;
+        padding: 4px 8px;
         cursor: pointer;
       }
       .codex-archive-action-bar {
@@ -262,12 +267,20 @@
   }
 
   function defaultCodexPlusSettings() {
-    return { pluginEntryUnlock: true, forcePluginInstall: true, sessionDelete: true, nativeMenuPlacement: true };
+    return {
+      pluginEntryUnlock: true,
+      forcePluginInstall: true,
+      sessionDelete: true,
+      nativeMenuPlacement: true,
+    };
   }
 
   function codexPlusSettings() {
     try {
-      return { ...defaultCodexPlusSettings(), ...JSON.parse(localStorage.getItem(codexPlusSettingsKey) || "{}") };
+      return {
+        ...defaultCodexPlusSettings(),
+        ...JSON.parse(localStorage.getItem(codexPlusSettingsKey) || "{}"),
+      };
     } catch {
       return defaultCodexPlusSettings();
     }
@@ -281,15 +294,21 @@
   }
 
   function renderCodexPlusMenu() {
-    document.querySelectorAll(".codex-plus-toggle[data-codex-plus-setting]").forEach((button) => {
-      const key = button.getAttribute("data-codex-plus-setting");
-      button.dataset.enabled = String(!!codexPlusSettings()[key]);
-    });
+    document
+      .querySelectorAll(".codex-plus-toggle[data-codex-plus-setting]")
+      .forEach((button) => {
+        const key = button.getAttribute("data-codex-plus-setting");
+        button.dataset.enabled = String(!!codexPlusSettings()[key]);
+      });
   }
 
   function openCodexPlusModal() {
-    document.querySelectorAll(".codex-plus-modal-overlay").forEach((node) => node.remove());
-    document.querySelectorAll('[data-codex-plus-dialog="true"]').forEach((node) => node.remove());
+    document
+      .querySelectorAll(".codex-plus-modal-overlay")
+      .forEach((node) => node.remove());
+    document
+      .querySelectorAll('[data-codex-plus-dialog="true"]')
+      .forEach((node) => node.remove());
     const overlay = document.createElement("div");
     overlay.className = "codex-plus-modal-overlay";
     overlay.innerHTML = `
@@ -325,22 +344,29 @@
         </div>
       </div>
     `;
-    overlay.addEventListener("click", (event) => {
-      if (event.target === overlay || event.target.closest(".codex-plus-modal-close")) {
-        overlay.remove();
-        return;
-      }
-      const issueButton = event.target.closest("[data-codex-plus-issue]");
-      if (issueButton) {
-        const issueUrl = "https://github.com/BigPizzaV3/CodexPlusPlus/issues";
-        window.open(issueUrl, "_blank");
-        return;
-      }
-      const toggle = event.target.closest("[data-codex-plus-setting]");
-      if (!toggle) return;
-      const key = toggle.getAttribute("data-codex-plus-setting");
-      setCodexPlusSetting(key, !codexPlusSettings()[key]);
-    }, true);
+    overlay.addEventListener(
+      "click",
+      (event) => {
+        if (
+          event.target === overlay ||
+          event.target.closest(".codex-plus-modal-close")
+        ) {
+          overlay.remove();
+          return;
+        }
+        const issueButton = event.target.closest("[data-codex-plus-issue]");
+        if (issueButton) {
+          const issueUrl = "https://github.com/BigPizzaV3/CodexPlusPlus/issues";
+          window.open(issueUrl, "_blank");
+          return;
+        }
+        const toggle = event.target.closest("[data-codex-plus-setting]");
+        if (!toggle) return;
+        const key = toggle.getAttribute("data-codex-plus-setting");
+        setCodexPlusSetting(key, !codexPlusSettings()[key]);
+      },
+      true,
+    );
     document.body.appendChild(overlay);
     renderCodexPlusMenu();
   }
@@ -348,20 +374,38 @@
   function findNativeMenuInsertionPoint() {
     if (!codexPlusSettings().nativeMenuPlacement) return null;
     const header = document.querySelector(".app-header-tint");
-    const menuBar = header?.querySelector(".flex.items-center.gap-0\\.5") || header?.querySelector('[class*="flex items-center gap-0.5"]');
+    const menuBar =
+      header?.querySelector(".flex.items-center.gap-0\\.5") ||
+      header?.querySelector('[class*="flex items-center gap-0.5"]');
     if (!menuBar) return null;
-    const buttons = Array.from(menuBar.querySelectorAll("button")).filter((button) => !button.closest(`#${codexPlusMenuId}`));
+    const buttons = Array.from(menuBar.querySelectorAll("button")).filter(
+      (button) => !button.closest(`#${codexPlusMenuId}`),
+    );
     const firstButton = buttons[0] || null;
-    return { parent: menuBar, before: firstButton, nativeButtonClass: firstButton?.className || "" };
+    return {
+      parent: menuBar,
+      before: firstButton,
+      nativeButtonClass: firstButton?.className || "",
+    };
   }
 
   function removeDuplicateCodexPlusMenus(keep) {
-    document.querySelectorAll(`#${codexPlusMenuId}, [data-codex-plus-menu="true"]`).forEach((node) => {
-      if (node !== keep) node.remove();
-    });
+    document
+      .querySelectorAll(`#${codexPlusMenuId}, [data-codex-plus-menu="true"]`)
+      .forEach((node) => {
+        if (node !== keep) node.remove();
+      });
     Array.from(document.querySelectorAll("button")).forEach((button) => {
-      const label = (button.getAttribute("aria-label") || button.getAttribute("title") || button.textContent || "").trim();
-      if ((label === "Codex++" || label === `Codex++ ${codexPlusVersion}`) && !button.closest(`#${codexPlusMenuId}`)) {
+      const label = (
+        button.getAttribute("aria-label") ||
+        button.getAttribute("title") ||
+        button.textContent ||
+        ""
+      ).trim();
+      if (
+        (label === "Codex++" || label === `Codex++ ${codexPlusVersion}`) &&
+        !button.closest(`#${codexPlusMenuId}`)
+      ) {
         button.remove();
       }
     });
@@ -375,14 +419,20 @@
       "codex-plus-trigger",
       "codex-plus-trigger-native",
       isMacPlatform() ? "codex-plus-trigger-macos" : "",
-    ].filter(Boolean).join(" ");
+    ]
+      .filter(Boolean)
+      .join(" ");
     if (trigger.dataset.codexPlusTriggerInstalled === "5") return;
     trigger.dataset.codexPlusTriggerInstalled = "5";
-    trigger.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      openCodexPlusModal();
-    }, true);
+    trigger.addEventListener(
+      "click",
+      (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openCodexPlusModal();
+      },
+      true,
+    );
   }
 
   function installCodexPlusMenu() {
@@ -392,8 +442,16 @@
     if (existing && existing.dataset.codexPlusMenuVersion !== "5") {
       existing.remove();
       insertionPoint = findNativeMenuInsertionPoint();
-    } else if (existing && insertionPoint && existing.parentElement === insertionPoint.parent) {
-      configureCodexPlusTrigger(existing, existing.querySelector("button"), insertionPoint.nativeButtonClass);
+    } else if (
+      existing &&
+      insertionPoint &&
+      existing.parentElement === insertionPoint.parent
+    ) {
+      configureCodexPlusTrigger(
+        existing,
+        existing.querySelector("button"),
+        insertionPoint.nativeButtonClass,
+      );
       removeDuplicateCodexPlusMenus(existing);
       return;
     }
@@ -413,12 +471,16 @@
         <path d="M6.2 2.8H13.8" stroke="currentColor" stroke-width="1.6" opacity=".7"></path>
       </svg>
     `;
-    const nativeButtonClass = insertionPoint?.nativeButtonClass || "codex-plus-trigger";
+    const nativeButtonClass =
+      insertionPoint?.nativeButtonClass || "codex-plus-trigger";
     configureCodexPlusTrigger(menu, trigger, nativeButtonClass);
     menu.appendChild(trigger);
     if (insertionPoint) {
       menu.className = "";
-      const safeBefore = insertionPoint.before?.parentElement === insertionPoint.parent ? insertionPoint.before : null;
+      const safeBefore =
+        insertionPoint.before?.parentElement === insertionPoint.parent
+          ? insertionPoint.before
+          : null;
       insertionPoint.parent.insertBefore(menu, safeBefore);
     } else {
       menu.className = "codex-plus-menu-floating";
@@ -428,14 +490,24 @@
   }
 
   function reactFiberFrom(element) {
-    const fiberKey = Object.keys(element).find((key) => key.startsWith("__reactFiber"));
+    const fiberKey = Object.keys(element).find((key) =>
+      key.startsWith("__reactFiber"),
+    );
     return fiberKey ? element[fiberKey] : null;
   }
 
   function authContextValueFrom(element) {
     for (let fiber = reactFiberFrom(element); fiber; fiber = fiber.return) {
-      for (const value of [fiber.memoizedProps?.value, fiber.pendingProps?.value]) {
-        if (value && typeof value === "object" && typeof value.setAuthMethod === "function" && "authMethod" in value) {
+      for (const value of [
+        fiber.memoizedProps?.value,
+        fiber.pendingProps?.value,
+      ]) {
+        if (
+          value &&
+          typeof value === "object" &&
+          typeof value.setAuthMethod === "function" &&
+          "authMethod" in value
+        ) {
           return value;
         }
       }
@@ -451,13 +523,24 @@
   }
 
   function pluginEntryButton() {
-    return document.querySelector('nav[role="navigation"] button.h-token-nav-row.w-full svg path[d^="M7.94562 14.0277"]')?.closest("button");
+    return document
+      .querySelector(
+        'nav[role="navigation"] button.h-token-nav-row.w-full svg path[d^="M7.94562 14.0277"]',
+      )
+      ?.closest("button");
   }
 
   function labelUnlockedPluginEntry(button) {
-    const labelTextNode = Array.from(button.querySelectorAll("span, div")).reverse()
+    const labelTextNode = Array.from(button.querySelectorAll("span, div"))
+      .reverse()
       .flatMap((node) => Array.from(node.childNodes))
-      .find((node) => node.nodeType === 3 && /^(插件|Plugins)( - 已解锁| - Unlocked)?$/i.test((node.nodeValue || "").trim()));
+      .find(
+        (node) =>
+          node.nodeType === 3 &&
+          /^(插件|Plugins)( - 已解锁| - Unlocked)?$/i.test(
+            (node.nodeValue || "").trim(),
+          ),
+      );
     if (!labelTextNode) return;
     const current = (labelTextNode.nodeValue || "").trim();
     labelTextNode.nodeValue = /^Plugins/i.test(current) ? "Plugins" : "插件";
@@ -475,19 +558,29 @@
       node.style.display = "";
     });
     labelUnlockedPluginEntry(pluginButton);
-    const reactPropsKey = Object.keys(pluginButton).find((key) => key.startsWith("__reactProps"));
+    const reactPropsKey = Object.keys(pluginButton).find((key) =>
+      key.startsWith("__reactProps"),
+    );
     if (reactPropsKey) {
       pluginButton[reactPropsKey].disabled = false;
     }
     if (pluginButton.dataset.codexPluginEnabled === "true") return;
     pluginButton.dataset.codexPluginEnabled = "true";
-    pluginButton.addEventListener("click", () => {
-      spoofChatGPTAuthMethod(pluginButton);
-    }, true);
+    pluginButton.addEventListener(
+      "click",
+      () => {
+        spoofChatGPTAuthMethod(pluginButton);
+      },
+      true,
+    );
   }
 
   function pluginInstallCandidates() {
-    return Array.from(document.querySelectorAll('button:disabled.w-full.justify-center, [role="button"][aria-disabled="true"].cursor-not-allowed'));
+    return Array.from(
+      document.querySelectorAll(
+        'button:disabled.w-full.justify-center, [role="button"][aria-disabled="true"].cursor-not-allowed',
+      ),
+    );
   }
 
   function installButtonLabel(element) {
@@ -498,10 +591,17 @@
     button.disabled = false;
     button.removeAttribute("disabled");
     button.removeAttribute("aria-disabled");
-    button.classList.remove("disabled", "opacity-50", "cursor-not-allowed", "pointer-events-none");
+    button.classList.remove(
+      "disabled",
+      "opacity-50",
+      "cursor-not-allowed",
+      "pointer-events-none",
+    );
     button.style.pointerEvents = "auto";
     button.tabIndex = 0;
-    const reactPropsKey = Object.keys(button).find((key) => key.startsWith("__reactProps"));
+    const reactPropsKey = Object.keys(button).find((key) =>
+      key.startsWith("__reactProps"),
+    );
     if (reactPropsKey) {
       button[reactPropsKey].disabled = false;
       button[reactPropsKey]["aria-disabled"] = false;
@@ -509,7 +609,13 @@
   }
 
   function labelForcedInstallButton(button) {
-    const textNode = Array.from(button.childNodes).find((node) => node.nodeType === 3 && (/^安装\s/.test((node.nodeValue || "").trim()) || /^Install\s/.test((node.nodeValue || "").trim()) || (node.nodeValue || "").trim() === "强制安装"));
+    const textNode = Array.from(button.childNodes).find(
+      (node) =>
+        node.nodeType === 3 &&
+        (/^安装\s/.test((node.nodeValue || "").trim()) ||
+          /^Install\s/.test((node.nodeValue || "").trim()) ||
+          (node.nodeValue || "").trim() === "强制安装"),
+    );
     if (textNode) {
       textNode.nodeValue = "强制安装";
     }
@@ -519,7 +625,12 @@
     if (!codexPlusSettings().forcePluginInstall) return;
     pluginInstallCandidates().forEach((button) => {
       const text = installButtonLabel(button);
-      if (!/^安装\s/.test(text) && !/^Install\s/.test(text) && text !== "强制安装") return;
+      if (
+        !/^安装\s/.test(text) &&
+        !/^Install\s/.test(text) &&
+        text !== "强制安装"
+      )
+        return;
       unblockButtonElement(button);
       labelForcedInstallButton(button);
     });
@@ -535,22 +646,41 @@
       if (cachedSessionRows.length > 0) return cachedSessionRows;
     }
 
-    cachedSessionRows = Array.from(document.querySelectorAll('[data-app-action-sidebar-thread-id]'));
+    cachedSessionRows = Array.from(
+      document.querySelectorAll("[data-app-action-sidebar-thread-id]"),
+    );
     cachedSessionRowsAt = now;
     return cachedSessionRows;
   }
 
   function archivePageHintVisible() {
     if (window.location.href.includes("archive")) return true;
-    if (document.querySelector('[data-codex-archive-page-row="true"], [data-codex-archive-delete-all]')) return true;
-    const archiveNav = document.querySelector('button[aria-label="已归档对话"], button[aria-label="Archived conversations"]');
-    if (archiveNav?.className?.includes?.("bg-token-list-hover-background")) return true;
-    return !!Array.from(document.querySelectorAll("h1, h2, h3")).find((element) => (element.textContent || "").trim() === "已归档对话");
+    if (
+      document.querySelector(
+        '[data-codex-archive-page-row="true"], [data-codex-archive-delete-all]',
+      )
+    )
+      return true;
+    const archiveNav = document.querySelector(
+      'button[aria-label="已归档对话"], button[aria-label="Archived conversations"]',
+    );
+    if (archiveNav?.className?.includes?.("bg-token-list-hover-background"))
+      return true;
+    return !!Array.from(document.querySelectorAll("h1, h2, h3")).find(
+      (element) => (element.textContent || "").trim() === "已归档对话",
+    );
   }
 
   function archivedPageRows() {
     if (!archivePageHintVisible()) return [];
-    const rows = Array.from(document.querySelectorAll("button")).filter((button) => (button.textContent || "").trim() === "取消归档").map((button) => button.closest(".flex.w-full.items-center.justify-between") || button.parentElement).filter(Boolean);
+    const rows = Array.from(document.querySelectorAll("button"))
+      .filter((button) => (button.textContent || "").trim() === "取消归档")
+      .map(
+        (button) =>
+          button.closest(".flex.w-full.items-center.justify-between") ||
+          button.parentElement,
+      )
+      .filter(Boolean);
     rows.forEach((row) => {
       row.dataset.codexArchivePageRow = "true";
       row.setAttribute("data-codex-archive-page-row", "true");
@@ -560,7 +690,12 @@
 
   function archivedSessionRows() {
     if (!archivePageHintVisible()) return [];
-    return sessionRows().filter((row) => row.querySelector('button[aria-label="取消归档对话"]') || row.outerHTML.includes("取消归档") || row.outerHTML.includes("unarchive"));
+    return sessionRows().filter(
+      (row) =>
+        row.querySelector('button[aria-label="取消归档对话"]') ||
+        row.outerHTML.includes("取消归档") ||
+        row.outerHTML.includes("unarchive"),
+    );
   }
 
   function archivedRows() {
@@ -573,13 +708,25 @@
   }
 
   function sessionRefFromRow(row) {
-    const href = row.getAttribute("href") || row.querySelector("a")?.getAttribute("href") || "";
-    const idMatch = href.match(/(?:session|conversation|thread)[=/:-]([A-Za-z0-9_.-]+)/i) || href.match(/([A-Za-z0-9_-]{8,})$/);
-    const codexThreadId = row.getAttribute("data-app-action-sidebar-thread-id") || "";
-    const fallbackId = row.getAttribute("data-session-id") || row.getAttribute("data-testid") || "";
+    const href =
+      row.getAttribute("href") ||
+      row.querySelector("a")?.getAttribute("href") ||
+      "";
+    const idMatch =
+      href.match(/(?:session|conversation|thread)[=/:-]([A-Za-z0-9_.-]+)/i) ||
+      href.match(/([A-Za-z0-9_-]{8,})$/);
+    const codexThreadId =
+      row.getAttribute("data-app-action-sidebar-thread-id") || "";
+    const fallbackId =
+      row.getAttribute("data-session-id") ||
+      row.getAttribute("data-testid") ||
+      "";
     const sessionId = codexThreadId || (idMatch && idMatch[1]) || fallbackId;
-    const titleNode = row.querySelector('[data-thread-title]');
-    const title = ((titleNode || row).textContent || "Untitled session").replace("删除", "").trim().slice(0, 160);
+    const titleNode = row.querySelector("[data-thread-title]");
+    const title = ((titleNode || row).textContent || "Untitled session")
+      .replace("删除", "")
+      .trim()
+      .slice(0, 160);
     return { session_id: sessionId, title };
   }
 
@@ -591,7 +738,9 @@
   }
 
   function showToast(message, undoToken) {
-    document.querySelectorAll(".codex-delete-toast").forEach((node) => node.remove());
+    document
+      .querySelectorAll(".codex-delete-toast")
+      .forEach((node) => node.remove());
     const toast = document.createElement("div");
     toast.className = "codex-delete-toast";
     toast.textContent = message;
@@ -619,7 +768,9 @@
   }
 
   function confirmDelete(title) {
-    document.querySelectorAll(".codex-delete-confirm-overlay").forEach((node) => node.remove());
+    document
+      .querySelectorAll(".codex-delete-confirm-overlay")
+      .forEach((node) => node.remove());
     return new Promise((resolve) => {
       const overlay = document.createElement("div");
       overlay.className = "codex-delete-confirm-overlay";
@@ -640,34 +791,57 @@
         overlay.remove();
         resolve(value);
       };
-      overlay.addEventListener("click", (event) => {
-        if (event.target === overlay || event.target.closest("[data-codex-delete-cancel]")) {
-          finish(false, event);
-          return;
-        }
-        if (event.target.closest("[data-codex-delete-confirm]")) {
-          finish(true, event);
-        }
-      }, true);
-      overlay.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") finish(false, event);
-      }, true);
+      overlay.addEventListener(
+        "click",
+        (event) => {
+          if (
+            event.target === overlay ||
+            event.target.closest("[data-codex-delete-cancel]")
+          ) {
+            finish(false, event);
+            return;
+          }
+          if (event.target.closest("[data-codex-delete-confirm]")) {
+            finish(true, event);
+          }
+        },
+        true,
+      );
+      overlay.addEventListener(
+        "keydown",
+        (event) => {
+          if (event.key === "Escape") finish(false, event);
+        },
+        true,
+      );
       document.body.appendChild(overlay);
       overlay.querySelector("[data-codex-delete-cancel]")?.focus();
     });
   }
 
   function rowHref(row) {
-    return row.getAttribute("href") || row.querySelector("a")?.getAttribute("href") || "";
+    return (
+      row.getAttribute("href") ||
+      row.querySelector("a")?.getAttribute("href") ||
+      ""
+    );
   }
 
   function isCurrentSessionRow(row, ref) {
-    if (row.getAttribute("aria-current") === "page" || row.getAttribute("aria-current") === "true") return true;
+    if (
+      row.getAttribute("aria-current") === "page" ||
+      row.getAttribute("aria-current") === "true"
+    )
+      return true;
     const href = rowHref(row);
     if (href) {
       try {
         const url = new URL(href, window.location.href);
-        if (url.href === window.location.href || url.pathname === window.location.pathname) return true;
+        if (
+          url.href === window.location.href ||
+          url.pathname === window.location.pathname
+        )
+          return true;
       } catch {
         if (window.location.href.includes(href)) return true;
       }
@@ -693,13 +867,26 @@
 
   function updateDeleteButtonOffsets() {
     sessionRows().forEach((row) => {
-      const hasArchiveConfirm = Array.from(row.querySelectorAll("button")).some((button) => {
-        const rect = button.getBoundingClientRect();
-        const label = button.getAttribute("aria-label") || "";
-        const text = (button.textContent || "").trim();
-        if (button.classList.contains(buttonClass) || label === "归档对话" || label === "置顶对话") return false;
-        return text === "确认" || (text.length > 0 && rect.width > 0 && rect.width <= 36 && rect.x > row.getBoundingClientRect().right - 50);
-      });
+      const hasArchiveConfirm = Array.from(row.querySelectorAll("button")).some(
+        (button) => {
+          const rect = button.getBoundingClientRect();
+          const label = button.getAttribute("aria-label") || "";
+          const text = (button.textContent || "").trim();
+          if (
+            button.classList.contains(buttonClass) ||
+            label === "归档对话" ||
+            label === "置顶对话"
+          )
+            return false;
+          return (
+            text === "确认" ||
+            (text.length > 0 &&
+              rect.width > 0 &&
+              rect.width <= 36 &&
+              rect.x > row.getBoundingClientRect().right - 50)
+          );
+        },
+      );
       row.classList.toggle("codex-archive-confirm-visible", hasArchiveConfirm);
     });
   }
@@ -713,7 +900,10 @@
       if (!confirmed) return;
       releaseDeleteFocus(row, button);
       const result = await postJson("/delete", ref);
-      if (result.status === "server_deleted" || result.status === "local_deleted") {
+      if (
+        result.status === "server_deleted" ||
+        result.status === "local_deleted"
+      ) {
         removeDeletedRow(row, button, ref);
         showToast(result.message || "删除成功", result.undo_token);
       } else {
@@ -723,8 +913,16 @@
   }
 
   function installDeleteButtonEventDelegation() {
-    document.removeEventListener("pointerup", window.__codexSessionDeleteDocumentDeleteHandler, true);
-    document.removeEventListener("click", window.__codexSessionDeleteDocumentDeleteHandler, true);
+    document.removeEventListener(
+      "pointerup",
+      window.__codexSessionDeleteDocumentDeleteHandler,
+      true,
+    );
+    document.removeEventListener(
+      "click",
+      window.__codexSessionDeleteDocumentDeleteHandler,
+      true,
+    );
     const handler = (event) => {
       const button = event.target?.closest?.(`.${buttonClass}`);
       const row = button?.closest?.("[data-app-action-sidebar-thread-id]");
@@ -740,8 +938,14 @@
 
   function attachButton(row) {
     if (!codexPlusSettings().sessionDelete) return;
-    const existingDeleteButtons = Array.from(row.querySelectorAll(`.${buttonClass}`));
-    if (existingDeleteButtons.length === 1 && existingDeleteButtons[0].dataset.codexDeleteVersion === codexDeleteVersion) return;
+    const existingDeleteButtons = Array.from(
+      row.querySelectorAll(`.${buttonClass}`),
+    );
+    if (
+      existingDeleteButtons.length === 1 &&
+      existingDeleteButtons[0].dataset.codexDeleteVersion === codexDeleteVersion
+    )
+      return;
     existingDeleteButtons.forEach((button) => button.remove());
     row.dataset.codexDeleteRow = "false";
     const ref = sessionRefFromRow(row);
@@ -758,19 +962,24 @@
       event.stopImmediatePropagation?.();
       releaseDeleteFocus(row, button);
     };
-    ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach((eventName) => {
-      button.addEventListener(eventName, stopDeleteButtonEvent, true);
-    });
-    const openDeleteConfirm = (event) => openDeleteConfirmForRow(row, button, ref, event);
+    ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach(
+      (eventName) => {
+        button.addEventListener(eventName, stopDeleteButtonEvent, true);
+      },
+    );
+    const openDeleteConfirm = (event) =>
+      openDeleteConfirmForRow(row, button, ref, event);
     button.addEventListener("pointerup", openDeleteConfirm, true);
     button.addEventListener("click", openDeleteConfirm, true);
     row.appendChild(button);
     const refreshDeleteButton = (originalButton) => {
       if (!originalButton.isConnected) return;
       const replacement = originalButton.cloneNode(true);
-      ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach((eventName) => {
-        replacement.addEventListener(eventName, stopDeleteButtonEvent, true);
-      });
+      ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach(
+        (eventName) => {
+          replacement.addEventListener(eventName, stopDeleteButtonEvent, true);
+        },
+      );
       replacement.addEventListener("pointerup", openDeleteConfirm, true);
       replacement.addEventListener("click", openDeleteConfirm, true);
       originalButton.replaceWith(replacement);
@@ -782,13 +991,20 @@
     try {
       attachButton(row);
     } catch (error) {
-      window.__codexSessionDeleteAttachButtonFailures = window.__codexSessionDeleteAttachButtonFailures || [];
-      window.__codexSessionDeleteAttachButtonFailures.push(String(error?.stack || error));
+      window.__codexSessionDeleteAttachButtonFailures =
+        window.__codexSessionDeleteAttachButtonFailures || [];
+      window.__codexSessionDeleteAttachButtonFailures.push(
+        String(error?.stack || error),
+      );
     }
   }
 
   function reactArchivedThreadFromNode(node) {
-    const reactKey = Object.keys(node).find((key) => key.startsWith("__reactFiber$") || key.startsWith("__reactInternalInstance$"));
+    const reactKey = Object.keys(node).find(
+      (key) =>
+        key.startsWith("__reactFiber$") ||
+        key.startsWith("__reactInternalInstance$"),
+    );
     let fiber = reactKey ? node[reactKey] : null;
     for (let depth = 0; fiber && depth < 20; depth += 1, fiber = fiber.return) {
       const props = fiber.memoizedProps || fiber.pendingProps || {};
@@ -810,11 +1026,19 @@
   function archivedRefFromRow(row) {
     const archivedThread = archivedThreadFromRow(row);
     if (archivedThread?.id || archivedThread?.sessionId) {
-      return { session_id: archivedThread.id || archivedThread.sessionId, title: archivedThread.title || row.querySelector(".truncate.text-base")?.textContent?.trim() || "Untitled session" };
+      return {
+        session_id: archivedThread.id || archivedThread.sessionId,
+        title:
+          archivedThread.title ||
+          row.querySelector(".truncate.text-base")?.textContent?.trim() ||
+          "Untitled session",
+      };
     }
     const sidebarRef = sessionRefFromRow(row);
     if (sidebarRef.session_id) return sidebarRef;
-    const titleNode = row.querySelector(".truncate.text-base, [data-thread-title], a, div");
+    const titleNode = row.querySelector(
+      ".truncate.text-base, [data-thread-title], a, div",
+    );
     const title = ((titleNode || row).textContent || "Untitled session")
       .replace("取消归档", "")
       .replace("删除", "")
@@ -839,8 +1063,11 @@
   }
 
   function archiveTitleContainer() {
-    return Array.from(document.querySelectorAll("h1, h2, h3, div, span"))
-      .find((element) => (element.textContent || "").trim() === "已归档对话" && element.getBoundingClientRect().x > 350);
+    return Array.from(document.querySelectorAll("h1, h2, h3, div, span")).find(
+      (element) =>
+        (element.textContent || "").trim() === "已归档对话" &&
+        element.getBoundingClientRect().x > 350,
+    );
   }
 
   async function deleteArchivedSessions(rows) {
@@ -849,7 +1076,10 @@
       const ref = await resolveArchivedThread(row);
       if (!ref.session_id) continue;
       const result = await postJson("/delete", ref);
-      if (result.status === "server_deleted" || result.status === "local_deleted") {
+      if (
+        result.status === "server_deleted" ||
+        result.status === "local_deleted"
+      ) {
         row.remove();
         deleted += 1;
       }
@@ -861,38 +1091,51 @@
     if (!codexPlusSettings().sessionDelete) return;
     if (row.dataset.codexArchiveDeleteRow === "true") return;
     row.dataset.codexArchiveDeleteRow = "true";
-    const unarchiveButton = Array.from(row.querySelectorAll("button")).find((button) => (button.textContent || "").trim() === "取消归档");
+    const unarchiveButton = Array.from(row.querySelectorAll("button")).find(
+      (button) => (button.textContent || "").trim() === "取消归档",
+    );
     if (!unarchiveButton) return;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "codex-archive-delete-all";
     button.textContent = "删除";
-    ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach((eventName) => {
-      button.addEventListener(eventName, stopArchivedButtonEvent, true);
-    });
-    button.addEventListener("click", async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      const ref = await resolveArchivedThread(row);
-      if (!ref.session_id) {
-        showToast("删除失败：未找到归档会话 ID", null);
-        return;
-      }
-      if (!(await confirmDelete(ref.title))) return;
-      const result = await postJson("/delete", ref);
-      if (result.status === "server_deleted" || result.status === "local_deleted") {
-        row.remove();
-        showToast(result.message || "删除成功", result.undo_token);
-      } else {
-        showToast(result.message || "删除失败", null);
-      }
-    }, true);
+    ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach(
+      (eventName) => {
+        button.addEventListener(eventName, stopArchivedButtonEvent, true);
+      },
+    );
+    button.addEventListener(
+      "click",
+      async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+        const ref = await resolveArchivedThread(row);
+        if (!ref.session_id) {
+          showToast("删除失败：未找到归档会话 ID", null);
+          return;
+        }
+        if (!(await confirmDelete(ref.title))) return;
+        const result = await postJson("/delete", ref);
+        if (
+          result.status === "server_deleted" ||
+          result.status === "local_deleted"
+        ) {
+          row.remove();
+          showToast(result.message || "删除成功", result.undo_token);
+        } else {
+          showToast(result.message || "删除失败", null);
+        }
+      },
+      true,
+    );
     unarchiveButton.insertAdjacentElement("afterend", button);
   }
 
   function installArchivedDeleteAllButton() {
-    const existingButton = document.querySelector("[data-codex-archive-delete-all]");
+    const existingButton = document.querySelector(
+      "[data-codex-archive-delete-all]",
+    );
     if (!codexPlusSettings().sessionDelete || !archivedPageVisible()) {
       existingButton?.remove();
       return;
@@ -902,7 +1145,11 @@
       existingButton?.remove();
       return;
     }
-    if (existingButton?.dataset.codexArchiveDeleteAllVersion === codexArchiveDeleteAllVersion) return;
+    if (
+      existingButton?.dataset.codexArchiveDeleteAllVersion ===
+      codexArchiveDeleteAllVersion
+    )
+      return;
     existingButton?.remove();
     const button = document.createElement("button");
     button.type = "button";
@@ -920,16 +1167,19 @@
     button.dataset.codexArchiveDeleteAll = "true";
     button.dataset.codexArchiveDeleteAllVersion = codexArchiveDeleteAllVersion;
     button.textContent = "删除全部归档";
-    ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach((eventName) => {
-      button.addEventListener(eventName, stopArchivedButtonEvent, true);
-    });
+    ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach(
+      (eventName) => {
+        button.addEventListener(eventName, stopArchivedButtonEvent, true);
+      },
+    );
     const openArchivedDeleteAllConfirm = async (event) => {
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
       const currentRows = archivedRows();
       if (currentRows.length === 0) return;
-      if (!(await confirmDelete(`全部 ${currentRows.length} 个归档会话`))) return;
+      if (!(await confirmDelete(`全部 ${currentRows.length} 个归档会话`)))
+        return;
       await deleteArchivedSessions(currentRows);
     };
     button.addEventListener("pointerup", openArchivedDeleteAllConfirm, true);
@@ -961,8 +1211,11 @@
     try {
       step();
     } catch (error) {
-      window.__codexSessionDeleteScanFailures = window.__codexSessionDeleteScanFailures || [];
-      window.__codexSessionDeleteScanFailures.push(String(error?.stack || error));
+      window.__codexSessionDeleteScanFailures =
+        window.__codexSessionDeleteScanFailures || [];
+      window.__codexSessionDeleteScanFailures.push(
+        String(error?.stack || error),
+      );
     }
   }
 
@@ -972,21 +1225,35 @@
   }
 
   function isExtensionUiNode(node) {
-    return !!node?.closest?.(".codex-delete-toast, .codex-delete-confirm-overlay, .codex-plus-modal-overlay, #codex-plus-menu");
+    return !!node?.closest?.(
+      ".codex-delete-toast, .codex-delete-confirm-overlay, .codex-plus-modal-overlay, #codex-plus-menu",
+    );
   }
 
-  const scanRelevantSelector = '[data-app-action-sidebar-thread-id], [data-codex-archive-page-row="true"], [data-codex-archive-delete-all], .app-header-tint, button[aria-label="已归档对话"], button[aria-label="Archived conversations"], button:disabled.w-full.justify-center, [role="button"][aria-disabled="true"].cursor-not-allowed';
+  const scanRelevantSelector =
+    '[data-app-action-sidebar-thread-id], [data-codex-archive-page-row="true"], [data-codex-archive-delete-all], .app-header-tint, button[aria-label="已归档对话"], button[aria-label="Archived conversations"], button:disabled.w-full.justify-center, [role="button"][aria-disabled="true"].cursor-not-allowed';
 
   function isScanRelevantNode(node) {
     if (node.nodeType !== 1) return false;
     if (isExtensionUiNode(node)) return false;
-    return !!node.matches?.(scanRelevantSelector) || !!node.closest?.(scanRelevantSelector) || !!node.querySelector?.(scanRelevantSelector);
+    return (
+      !!node.matches?.(scanRelevantSelector) ||
+      !!node.closest?.(scanRelevantSelector) ||
+      !!node.querySelector?.(scanRelevantSelector)
+    );
   }
 
   function isChatContentMutation(mutation) {
     const target = mutation.target;
-    if (target?.closest?.('[data-message-author-role], [data-testid="conversation-turn"], main .prose')) {
-      return !Array.from(mutation.addedNodes).some(isScanRelevantNode) && !Array.from(mutation.removedNodes).some(isScanRelevantNode);
+    if (
+      target?.closest?.(
+        '[data-message-author-role], [data-testid="conversation-turn"], main .prose',
+      )
+    ) {
+      return (
+        !Array.from(mutation.addedNodes).some(isScanRelevantNode) &&
+        !Array.from(mutation.removedNodes).some(isScanRelevantNode)
+      );
     }
     return false;
   }
@@ -997,7 +1264,12 @@
       if (isChatContentMutation(mutation)) return false;
       const target = mutation.target;
       if (isExtensionUiNode(target)) return false;
-      return Array.from(mutation.addedNodes).some((node) => node.nodeType === 1 && !isExtensionUiNode(node)) || Array.from(mutation.removedNodes).some((node) => node.nodeType === 1);
+      return (
+        Array.from(mutation.addedNodes).some(
+          (node) => node.nodeType === 1 && !isExtensionUiNode(node),
+        ) ||
+        Array.from(mutation.removedNodes).some((node) => node.nodeType === 1)
+      );
     });
   }
 
@@ -1018,5 +1290,8 @@
   scan();
   window.__codexSessionDeleteObserver?.disconnect();
   window.__codexSessionDeleteObserver = new MutationObserver(scheduleScan);
-  window.__codexSessionDeleteObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
+  window.__codexSessionDeleteObserver.observe(
+    document.body || document.documentElement,
+    { childList: true, subtree: true },
+  );
 })();

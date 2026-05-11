@@ -182,7 +182,7 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
     assert "updateDeleteButtonOffsets" in text
-    assert "codexDeleteStyleVersion = \"10\"" in text
+    assert "codexDeleteStyleVersion = \"11\"" in text
     assert "right: 66px" in text
     assert "确认" in text
     assert "归档对话" in text
@@ -194,9 +194,8 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
     assert "syncDeleteButtonStyle" not in text
     assert "syncDeleteButtonMetrics" not in text
     assert "window.getComputedStyle(confirmButton)" not in text
-    assert "min-width: 72px" in text
-    assert "height: 36px" in text
-    assert "padding: 8px 14px" in text
+    assert "color: #d04a3f" in text
+    assert "padding: 2px 8px" in text
     assert "font-weight: 500" in text
 
 
@@ -220,7 +219,8 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
     assert "attachArchivedPageDeleteButton" in text
     assert "resolveArchivedThread" in text
     assert "stopArchivedButtonEvent" in text
-    assert "[\"pointerdown\", \"mousedown\", \"mouseup\", \"touchstart\"].forEach((eventName) => {\n      button.addEventListener(eventName, stopArchivedButtonEvent, true);" in text
+    assert '["pointerdown", "mousedown", "mouseup", "touchstart"]' in text
+    assert 'button.addEventListener(eventName, stopArchivedButtonEvent, true)' in text
     assert "pointerup" in text
     assert "button.addEventListener(\"pointerup\", openArchivedDeleteAllConfirm, true)" in text
     assert "archivedRefFromRow(row)" in text
@@ -231,14 +231,18 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
     assert "replace(/\\d{4}年\\d{1,2}月\\d{1,2}日.*$/, \"\")" in text
     assert "const titleMatches = sessionRows().map(sessionRefFromRow)" not in text
     assert "document.querySelectorAll(\"[data-codex-archive-delete-all]\").forEach((node) => node.remove())" not in text
-    assert "const existingButton = document.querySelector(\"[data-codex-archive-delete-all]\")" in text
-    assert "if (existingButton?.dataset.codexArchiveDeleteAllVersion === codexArchiveDeleteAllVersion) return" in text
+    assert "const existingButton = document.querySelector(" in text
+    assert "\"[data-codex-archive-delete-all]\"" in text
+    assert "existingButton?.dataset.codexArchiveDeleteAllVersion" in text
+    assert "codexArchiveDeleteAllVersion" in text
     assert "existingButton?.remove()" in text
     assert "button.dataset.codexArchiveDeleteAllVersion = codexArchiveDeleteAllVersion" in text
     assert "data-codex-archive-delete-all" in text
     assert "codex-archive-action-bar" in text
     assert "codexDeleteStyleVersion" in text
     assert "style.dataset.codexDeleteStyleVersion" in text
+    assert "border: 1px solid #ef4444" not in text
+    assert "padding: 4px 8px" in text
     assert "position: fixed" in text
     assert "archiveTitleContainer" in text
     assert "element.getBoundingClientRect().x > 350" in text
