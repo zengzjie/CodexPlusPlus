@@ -2,12 +2,13 @@
   const helperBase = window.__CODEX_SESSION_DELETE_HELPER__ || "http://127.0.0.1:57321";
   const buttonClass = "codex-delete-button";
   const styleId = "codex-delete-style";
-  const codexDeleteStyleVersion = "5";
+  const codexDeleteStyleVersion = "7";
   const codexPlusMenuId = "codex-plus-menu";
   const codexDeleteVersion = "5";
   const codexArchiveDeleteAllVersion = "2";
   const codexPlusVersion = "1.0.4";
   const codexPlusSettingsKey = "codexPlusSettings";
+  const deleteFallbackClass = "codex-delete-button-fallback";
 
   function isMacPlatform() {
     try {
@@ -32,6 +33,9 @@
         transform: translateY(-50%);
         z-index: 20;
         opacity: 0;
+        cursor: pointer;
+      }
+      .${deleteFallbackClass} {
         border: 0;
         border-radius: 999px;
         background: #fde8e8;
@@ -39,7 +43,6 @@
         font: 13px system-ui, sans-serif;
         line-height: 20px;
         padding: 6px 12px;
-        cursor: pointer;
       }
       [data-codex-delete-row="true"]:hover .${buttonClass} { opacity: 1; }
       [data-codex-delete-row="true"].codex-archive-confirm-visible .${buttonClass} { right: 66px; }
@@ -167,11 +170,11 @@
         min-width: 28px;
         padding: 0;
         border-radius: 999px;
-        color: rgba(255,255,255,.76);
+        color: rgba(31,41,55,.72);
       }
       .codex-plus-trigger-macos:hover {
-        background: rgba(255,255,255,.06);
-        color: rgba(255,255,255,.92);
+        background: rgba(15,23,42,.06);
+        color: rgba(17,24,39,.92);
       }
       .codex-plus-trigger-icon {
         width: 16px;
@@ -735,7 +738,7 @@
     row.dataset.codexDeleteRow = "true";
     const button = document.createElement("button");
     button.type = "button";
-    button.className = buttonClass;
+    button.className = `${buttonClass} ${deleteFallbackClass}`;
     button.dataset.codexDeleteVersion = codexDeleteVersion;
     button.textContent = "删除";
     const stopDeleteButtonEvent = (event) => {

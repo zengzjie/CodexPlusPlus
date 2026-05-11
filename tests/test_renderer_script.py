@@ -182,15 +182,16 @@ def test_renderer_script_sidebar_delete_opens_on_pointerup_when_click_is_unrelia
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
     assert "updateDeleteButtonOffsets" in text
-    assert "codexDeleteStyleVersion = \"5\"" in text
+    assert "codexDeleteStyleVersion = \"7\"" in text
     assert "right: 66px" in text
     assert "确认" in text
     assert "归档对话" in text
     assert "button.getAttribute(\"aria-label\")" in text
     assert "label === \"归档对话\"" in text
-    assert "border-radius: 999px" in text
-    assert "background: #fde8e8" in text
-    assert "color: #dc2626" in text
+    assert "button.className = `${buttonClass} ${deleteFallbackClass}`" in text
+    assert "codex-delete-button-fallback" in text
+    assert "archiveConfirmButtonForRow" not in text
+    assert "syncDeleteButtonStyle" not in text
 
 
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
@@ -318,6 +319,9 @@ def test_renderer_script_does_not_include_fast_mode_patch():
     assert ".codex-plus-trigger-icon" in text
     assert "stroke-linecap: round" in text
     assert "stroke-linejoin: round" in text
+    assert "color: rgba(31,41,55,.72)" in text
+    assert "background: rgba(15,23,42,.06)" in text
+    assert "color: rgba(17,24,39,.92)" in text
     assert "app-header-tint" in text
     assert "flex items-center gap-0.5" in text
     assert "codex-plus-menu-floating" in text
