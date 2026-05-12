@@ -24,6 +24,8 @@ def test_renderer_script_supports_codex_sidebar_thread_attributes():
     end = text.index("\n\n  function archivePageHintVisible", start)
     session_rows_code = text[start:end]
     assert "data-app-action-sidebar-thread-id" in session_rows_code
+    assert "const deletedSessionIds = new Set()" in text
+    assert "isDeletedSessionRow(row)" in session_rows_code
     assert "row.getAttribute(deletedRowMarker) !== \"true\"" in session_rows_code
     assert "data-thread-title" in text
     assert "a[href*='session']" not in session_rows_code
@@ -146,6 +148,7 @@ def test_renderer_script_clears_focus_and_removes_deleted_rows():
     assert "document.activeElement.blur()" in text
     assert "const deletedRowMarker = \"data-codex-row-deleted\"" in text
     assert "row.setAttribute(deletedRowMarker, \"true\")" in remove_deleted_code
+    assert "deletedSessionIds.add(ref.session_id)" in remove_deleted_code
     assert "row.style.visibility = \"hidden\"" in remove_deleted_code
     assert "row.style.pointerEvents = \"none\"" in remove_deleted_code
     assert "row.style.height = \"0\"" in remove_deleted_code

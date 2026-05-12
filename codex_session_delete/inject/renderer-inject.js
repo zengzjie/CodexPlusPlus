@@ -11,6 +11,7 @@
   const codexPlusSettingsKey = "codexPlusSettings";
   const deleteFallbackClass = "codex-delete-button-fallback";
   const deletedRowMarker = "data-codex-row-deleted";
+  const deletedSessionIds = new Set();
 
   function isMacPlatform() {
     try {
@@ -629,18 +630,46 @@
   let cachedSessionRows = [];
   let cachedSessionRowsAt = 0;
 
+  function isDeletedSessionRow(row) {
+    const sessionId =
+      row.getAttribute("data-app-action-sidebar-thread-id") ||
+      row.getAttribute("data-session-id") ||
+      "";
+    return !!sessionId && deletedSessionIds.has(sessionId);
+  }
+
   function sessionRows(forceRefresh = false) {
     const now = Date.now();
     if (!forceRefresh && now - cachedSessionRowsAt < 150) {
       cachedSessionRows = cachedSessionRows.filter(
-        (row) => row.isConnected && row.getAttribute(deletedRowMarker) !== "true",
+        (row) =>
+          row.isConnected &&
+          row.getAttribute(deletedRowMarker) !== "true" &&
+          !isDeletedSessionRow(row),
       );
       if (cachedSessionRows.length > 0) return cachedSessionRows;
     }
 
     cachedSessionRows = Array.from(
       document.querySelectorAll("[data-app-action-sidebar-thread-id]"),
-    ).filter((row) => row.getAttribute(deletedRowMarker) !== "true");
+    ).filter((row) => {
+      if (
+        row.getAttribute(deletedRowMarker) === "true" ||
+        isDeletedSessionRow(row)
+      ) {
+        row.setAttribute(deletedRowMarker, "true");
+        row.style.visibility = "hidden";
+        row.style.pointerEvents = "none";
+        row.style.height = "0";
+        row.style.minHeight = "0";
+        row.style.margin = "0";
+        row.style.paddingTop = "0";
+        row.style.paddingBottom = "0";
+        row.style.overflow = "hidden";
+        return false;
+      }
+      return true;
+    });
     cachedSessionRowsAt = now;
     return cachedSessionRows;
   }
@@ -851,6 +880,9 @@
   function removeDeletedRow(row, button, ref) {
     releaseDeleteFocus(row, button);
     const shouldReload = isCurrentSessionRow(row, ref);
+    if (ref.session_id) {
+      deletedSessionIds.add(ref.session_id);
+    }
     row.setAttribute(deletedRowMarker, "true");
     row.dataset.codexDeleteRow = "false";
     row.querySelectorAll(`.${buttonClass}`).forEach((node) => node.remove());
