@@ -10,6 +10,7 @@
   const codexPlusVersion = "1.0.4";
   const codexPlusSettingsKey = "codexPlusSettings";
   const deleteFallbackClass = "codex-delete-button-fallback";
+  const deletedRowMarker = "data-codex-row-deleted";
 
   function isMacPlatform() {
     try {
@@ -631,13 +632,15 @@
   function sessionRows(forceRefresh = false) {
     const now = Date.now();
     if (!forceRefresh && now - cachedSessionRowsAt < 150) {
-      cachedSessionRows = cachedSessionRows.filter((row) => row.isConnected);
+      cachedSessionRows = cachedSessionRows.filter(
+        (row) => row.isConnected && row.getAttribute(deletedRowMarker) !== "true",
+      );
       if (cachedSessionRows.length > 0) return cachedSessionRows;
     }
 
     cachedSessionRows = Array.from(
       document.querySelectorAll("[data-app-action-sidebar-thread-id]"),
-    );
+    ).filter((row) => row.getAttribute(deletedRowMarker) !== "true");
     cachedSessionRowsAt = now;
     return cachedSessionRows;
   }
@@ -848,7 +851,18 @@
   function removeDeletedRow(row, button, ref) {
     releaseDeleteFocus(row, button);
     const shouldReload = isCurrentSessionRow(row, ref);
-    row.remove();
+    row.setAttribute(deletedRowMarker, "true");
+    row.dataset.codexDeleteRow = "false";
+    row.querySelectorAll(`.${buttonClass}`).forEach((node) => node.remove());
+    row.style.visibility = "hidden";
+    row.style.pointerEvents = "none";
+    row.style.height = "0";
+    row.style.minHeight = "0";
+    row.style.margin = "0";
+    row.style.paddingTop = "0";
+    row.style.paddingBottom = "0";
+    row.style.overflow = "hidden";
+    cachedSessionRows = cachedSessionRows.filter((cachedRow) => cachedRow !== row);
     if (shouldReload) {
       window.location.reload();
     }

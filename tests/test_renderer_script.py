@@ -24,6 +24,7 @@ def test_renderer_script_supports_codex_sidebar_thread_attributes():
     end = text.index("\n\n  function archivePageHintVisible", start)
     session_rows_code = text[start:end]
     assert "data-app-action-sidebar-thread-id" in session_rows_code
+    assert "row.getAttribute(deletedRowMarker) !== \"true\"" in session_rows_code
     assert "data-thread-title" in text
     assert "a[href*='session']" not in session_rows_code
     assert "conversation" not in session_rows_code
@@ -135,13 +136,22 @@ def test_renderer_script_chat_filter_keeps_relevant_node_escape_hatch():
 
 def test_renderer_script_clears_focus_and_removes_deleted_rows():
     text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
+    start = text.index("function removeDeletedRow")
+    end = text.index("\n\n  function updateDeleteButtonOffsets", start)
+    remove_deleted_code = text[start:end]
     assert "removeDeletedRow(row, button, ref)" in text
     assert "function releaseDeleteFocus" in text
     assert "releaseDeleteFocus(row, button)" in text
     assert "button.blur()" in text
     assert "document.activeElement.blur()" in text
-    assert "row.remove()" in text
-    assert "row.style.display = \"none\"" not in text
+    assert "const deletedRowMarker = \"data-codex-row-deleted\"" in text
+    assert "row.setAttribute(deletedRowMarker, \"true\")" in remove_deleted_code
+    assert "row.style.visibility = \"hidden\"" in remove_deleted_code
+    assert "row.style.pointerEvents = \"none\"" in remove_deleted_code
+    assert "row.style.height = \"0\"" in remove_deleted_code
+    assert "cachedSessionRows = cachedSessionRows.filter((cachedRow) => cachedRow !== row)" in remove_deleted_code
+    assert "row.remove()" not in remove_deleted_code
+    assert "row.style.display = \"none\"" not in remove_deleted_code
 
 
 def test_renderer_script_uses_in_page_confirm_and_stops_early_pointer_events():
