@@ -3,6 +3,7 @@
     window.__CODEX_SESSION_DELETE_HELPER__ || "http://127.0.0.1:57321";
   const buttonClass = "codex-delete-button";
   const styleId = "codex-delete-style";
+  const deletedStyleId = "codex-delete-deleted-style";
   const codexDeleteStyleVersion = "11";
   const codexPlusMenuId = "codex-plus-menu";
   const codexDeleteVersion = "5";
@@ -260,6 +261,41 @@
       .codex-plus-about { color: #a1a1aa; line-height: 1.5; }
     `;
     document.documentElement.appendChild(style);
+  }
+
+  function cssAttrEscape(value) {
+    return String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+  }
+
+  function refreshDeletedSessionStyle() {
+    const existingStyle = document.getElementById(deletedStyleId);
+    if (deletedSessionIds.size === 0) {
+      existingStyle?.remove();
+      return;
+    }
+    const style = existingStyle || document.createElement("style");
+    style.id = deletedStyleId;
+    const selectors = Array.from(deletedSessionIds)
+      .map(
+        (sessionId) =>
+          `[data-app-action-sidebar-thread-id="${cssAttrEscape(sessionId)}"]`,
+      )
+      .join(",\n");
+    style.textContent = `
+      ${selectors} {
+        visibility: hidden !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+      }
+    `;
+    if (!style.parentNode) {
+      document.documentElement.appendChild(style);
+    }
   }
 
   function defaultCodexPlusSettings() {
@@ -638,6 +674,31 @@
     return !!sessionId && deletedSessionIds.has(sessionId);
   }
 
+  function collapseDeletedRow(row) {
+    row.setAttribute(deletedRowMarker, "true");
+    row.style.visibility = "hidden";
+    row.style.pointerEvents = "none";
+    row.style.height = "0";
+    row.style.minHeight = "0";
+    row.style.margin = "0";
+    row.style.paddingTop = "0";
+    row.style.paddingBottom = "0";
+    row.style.overflow = "hidden";
+  }
+
+  function suppressDeletedSessionRows() {
+    document
+      .querySelectorAll("[data-app-action-sidebar-thread-id]")
+      .forEach((row) => {
+        if (
+          row.getAttribute(deletedRowMarker) === "true" ||
+          isDeletedSessionRow(row)
+        ) {
+          collapseDeletedRow(row);
+        }
+      });
+  }
+
   function sessionRows(forceRefresh = false) {
     const now = Date.now();
     if (!forceRefresh && now - cachedSessionRowsAt < 150) {
@@ -657,15 +718,7 @@
         row.getAttribute(deletedRowMarker) === "true" ||
         isDeletedSessionRow(row)
       ) {
-        row.setAttribute(deletedRowMarker, "true");
-        row.style.visibility = "hidden";
-        row.style.pointerEvents = "none";
-        row.style.height = "0";
-        row.style.minHeight = "0";
-        row.style.margin = "0";
-        row.style.paddingTop = "0";
-        row.style.paddingBottom = "0";
-        row.style.overflow = "hidden";
+        collapseDeletedRow(row);
         return false;
       }
       return true;
@@ -882,18 +935,11 @@
     const shouldReload = isCurrentSessionRow(row, ref);
     if (ref.session_id) {
       deletedSessionIds.add(ref.session_id);
+      refreshDeletedSessionStyle();
     }
-    row.setAttribute(deletedRowMarker, "true");
+    collapseDeletedRow(row);
     row.dataset.codexDeleteRow = "false";
     row.querySelectorAll(`.${buttonClass}`).forEach((node) => node.remove());
-    row.style.visibility = "hidden";
-    row.style.pointerEvents = "none";
-    row.style.height = "0";
-    row.style.minHeight = "0";
-    row.style.margin = "0";
-    row.style.paddingTop = "0";
-    row.style.paddingBottom = "0";
-    row.style.overflow = "hidden";
     cachedSessionRows = cachedSessionRows.filter((cachedRow) => cachedRow !== row);
     if (shouldReload) {
       window.location.reload();
@@ -1229,6 +1275,7 @@
 
   function scanLightweight() {
     installStyle();
+    suppressDeletedSessionRows();
     installCodexPlusMenu();
     installDeleteButtonEventDelegation();
   }
