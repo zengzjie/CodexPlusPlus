@@ -1,22 +1,29 @@
 from __future__ import annotations
 
 import ctypes
+import os
 import socket
 import subprocess
 import sys
 import threading
 import time
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
+from codex_session_delete import cdp
 from codex_session_delete.app_paths import resolve_codex_app_dir
 from codex_session_delete.api_adapter import ApiAdapter, UnavailableApiAdapter
 from codex_session_delete.backup_store import BackupStore
-from codex_session_delete.cdp import inject_file
+from codex_session_delete.cdp import evaluate_user_scripts, inject_file, open_devtools
 from codex_session_delete.helper_server import HelperServer
+from codex_session_delete.markdown_exporter import MarkdownExportService
 from codex_session_delete.models import DeleteResult, DeleteStatus, SessionRef
+from codex_session_delete.provider_sync import ProviderSyncStatus, run_provider_sync
+from codex_session_delete.settings_store import BackendSettings, SettingsStore
 from codex_session_delete.storage_adapter import SQLiteStorageAdapter
+from codex_session_delete.user_scripts import UserScriptManager
 
 
 class ApiFirstDeleteService:
@@ -42,9 +49,88 @@ class ApiFirstDeleteService:
             return None
         return self.local_adapter.find_archived_thread_by_title(title)
 
+    def move_thread_workspace(self, session: SessionRef, target_cwd: str) -> dict[str, object]:
+        if self.local_adapter is None:
+            return {"status": DeleteStatus.FAILED.value, "session_id": session.session_id, "message": "No local database configured"}
+        return self.local_adapter.move_codex_thread_workspace(session, target_cwd)
+
+    def thread_sort_key(self, session: SessionRef) -> dict[str, object]:
+        if self.local_adapter is None:
+            return {"status": DeleteStatus.FAILED.value, "session_id": session.session_id, "message": "No local database configured"}
+        return self.local_adapter.codex_thread_sort_key(session)
+
+    def thread_sort_keys(self, sessions: list[SessionRef]) -> dict[str, object]:
+        if self.local_adapter is None:
+            return {"status": DeleteStatus.FAILED.value, "message": "No local database configured", "sort_keys": []}
+        return self.local_adapter.codex_thread_sort_keys(sessions)
+
 
 class InjectedHelperServer(HelperServer):
     bridge_socket: Any = None
+
+
+@dataclass
+class CodexPlusRuntime:
+    websocket_url: str | None
+    user_scripts: UserScriptManager
+    debug_port: int | None = None
+    bridge_socket: Any = None
+    repair_callback: Callable[[], dict[str, object]] | None = None
+
+    def set_bridge_connection(self, websocket_url: str | None, bridge_socket: Any) -> None:
+        previous = self.bridge_socket
+        self.websocket_url = websocket_url
+        self.bridge_socket = bridge_socket
+        if previous is bridge_socket or previous is None:
+            return
+        try:
+            previous.close()
+        except Exception:
+            pass
+
+    def bridge_connected(self) -> bool:
+        if self.bridge_socket is None:
+            return False
+        connected = getattr(self.bridge_socket, "connected", None)
+        if connected is not None:
+            return bool(connected)
+        sock = getattr(self.bridge_socket, "sock", None)
+        if sock is not None and hasattr(sock, "connected"):
+            return bool(sock.connected)
+        return True
+
+    def reload_user_scripts(self) -> dict[str, object]:
+        if self.websocket_url:
+            evaluate_user_scripts(self.websocket_url, self.user_scripts.build_enabled_bundle())
+        return self.user_scripts.inventory()
+
+    def open_devtools(self) -> dict[str, object]:
+        if self.debug_port is None:
+            return {"status": "failed", "message": "No debug port configured"}
+        return open_devtools(self.debug_port)
+
+    def backend_status(self) -> dict[str, object]:
+        if not self.bridge_connected():
+            return {"status": "failed", "message": "本地服务桥接已断开"}
+        return {"status": "ok", "message": "本地服务已连接"}
+
+    def repair_backend(self) -> dict[str, object]:
+        if self.bridge_connected():
+            return self.backend_status()
+        if self.repair_callback is None:
+            return {"status": "failed", "message": "未配置本地服务修复逻辑"}
+        return self.repair_callback()
+
+
+def user_scripts_config_dir() -> Path:
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA")
+        return Path(base) / "Codex++" if base else Path.home() / "AppData" / "Roaming" / "Codex++"
+    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "Codex++"
+
+
+def backend_settings() -> BackendSettings:
+    return SettingsStore().load()
 
 
 def _can_bind_loopback_port(port: int) -> bool:
@@ -79,6 +165,33 @@ def build_codex_arguments(debug_port: int) -> list[str]:
         f"--remote-debugging-port={debug_port}",
         f"--remote-allow-origins=http://127.0.0.1:{debug_port}",
     ]
+
+
+def has_proxy_environment(env: dict[str, str] | None = None) -> bool:
+    source = env or os.environ
+    return any(source.get(name) for name in ("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY", "https_proxy", "http_proxy", "all_proxy"))
+
+
+def local_proxy_url() -> str | None:
+    for port in (7897, 7890, 10809, 10808, 1080):
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                return f"http://127.0.0.1:{port}"
+        except OSError:
+            continue
+    return None
+
+
+def codex_process_environment() -> dict[str, str]:
+    env = os.environ.copy()
+    if has_proxy_environment(env):
+        return env
+    proxy = local_proxy_url()
+    if proxy:
+        env.setdefault("HTTP_PROXY", proxy)
+        env.setdefault("HTTPS_PROXY", proxy)
+        env.setdefault("ALL_PROXY", proxy)
+    return env
 
 
 def build_codex_executable(app_dir: Path) -> Path:
@@ -184,16 +297,33 @@ def activate_packaged_app(app_user_model_id: str, arguments: str) -> int:
 
 def launch_codex_app(app_dir: Path, debug_port: int) -> Any:
     app_user_model_id = packaged_app_user_model_id(app_dir) if sys.platform == "win32" else None
+    env = codex_process_environment()
     if app_user_model_id:
-        return activate_packaged_app(app_user_model_id, subprocess.list2cmdline(build_codex_arguments(debug_port)))
+        proxy_keys = ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY")
+        previous = {key: os.environ.get(key) for key in proxy_keys}
+        os.environ.update({key: env[key] for key in proxy_keys if key in env})
+        try:
+            return activate_packaged_app(app_user_model_id, subprocess.list2cmdline(build_codex_arguments(debug_port)))
+        finally:
+            for key, value in previous.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
     if app_dir.suffix == ".app":
-        subprocess.run(["open", "-a", str(app_dir), "--args", *build_codex_arguments(debug_port)], check=True)
+        subprocess.run(["open", "-a", str(app_dir), "--args", *build_codex_arguments(debug_port)], check=True, env=env)
         return None
-    return subprocess.Popen(build_codex_command(app_dir, debug_port))
+    return subprocess.Popen(build_codex_command(app_dir, debug_port), env=env)
 
 
-def start_helper(service, host: str = "127.0.0.1", port: int = 57321) -> HelperServer:
-    server = InjectedHelperServer(host, port, service)
+def start_helper(
+    service,
+    export_service: MarkdownExportService | None = None,
+    host: str = "127.0.0.1",
+    port: int = 57321,
+    request_handler: Callable[[str, dict[str, object]], dict[str, object] | None] | None = None,
+) -> HelperServer:
+    server = InjectedHelperServer(host, port, service, export_service=export_service, request_handler=request_handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return server
@@ -204,11 +334,28 @@ def shutdown_helper(server: HelperServer) -> None:
     server.server_close()
 
 
-def inject_with_retry(debug_port: int, script_path: Path, helper_port: int, service: ApiFirstDeleteService, attempts: int = 20, delay: float = 0.5) -> Any:
+def inject_with_retry(
+    debug_port: int,
+    script_path: Path,
+    helper_port: int,
+    service: ApiFirstDeleteService,
+    export_service: MarkdownExportService,
+    runtime: CodexPlusRuntime,
+    attempts: int = 20,
+    delay: float = 0.5,
+) -> Any:
     last_error: Exception | None = None
     for _ in range(attempts):
         try:
-            return inject_file(debug_port, script_path, helper_port, lambda path, payload: handle_bridge_request(service, path, payload))
+            injection = inject_file(
+                debug_port,
+                script_path,
+                helper_port,
+                lambda path, payload: handle_bridge_request(service, export_service, path, payload, runtime),
+            )
+            runtime.set_bridge_connection(injection.websocket_url, injection.bridge_socket)
+            evaluate_user_scripts(injection.websocket_url, runtime.user_scripts.build_enabled_bundle())
+            return injection.bridge_socket or injection.result
         except Exception as exc:
             last_error = exc
             time.sleep(delay)
@@ -224,12 +371,35 @@ def launch_and_inject(app_dir: Path | None, db_path: Path | None, backup_dir: Pa
     debug_port = select_windows_loopback_port(debug_port)
     helper_port = select_windows_loopback_port(helper_port)
     service = ApiFirstDeleteService(UnavailableApiAdapter(), db_path, backup_dir)
-    server = start_helper(service, port=helper_port)
+    export_service = MarkdownExportService(db_path)
+    script_path = Path(__file__).parent / "inject" / "renderer-inject.js"
+    builtin_user_scripts_dir = Path(__file__).parent / "user_scripts"
+    user_config_dir = user_scripts_config_dir()
+    user_script_manager = UserScriptManager(builtin_user_scripts_dir, user_config_dir / "user_scripts", user_config_dir / "user_scripts.json")
+    runtime = CodexPlusRuntime(None, user_script_manager, debug_port)
+    if backend_settings().provider_sync_enabled:
+        sync_result = run_provider_sync()
+        if sync_result.status == ProviderSyncStatus.SKIPPED:
+            print(f"Provider sync skipped: {sync_result.message}")
+    def repair_backend_connection() -> dict[str, object]:
+        try:
+            server.bridge_socket = inject_with_retry(debug_port, script_path, server.port, service, export_service, runtime, attempts=4, delay=0.25)
+        except Exception as exc:
+            return {"status": "failed", "message": f"本地服务修复失败：{exc}"}
+        return {"status": "ok", "message": "本地服务已修复"}
+
+    runtime.repair_callback = repair_backend_connection
+
+    def helper_request_handler(path: str, payload: dict[str, object]) -> dict[str, object] | None:
+        if path not in {"/backend/status", "/backend/repair"}:
+            return None
+        return handle_bridge_request(service, export_service, path, payload, runtime)
+
+    server = start_helper(service, export_service, port=helper_port, request_handler=helper_request_handler)
     codex_proc = None
     try:
         codex_proc = launch_codex_app(resolved_app_dir, debug_port)
-        script_path = Path(__file__).parent / "inject" / "renderer-inject.js"
-        server.bridge_socket = inject_with_retry(debug_port, script_path, server.port, service)
+        server.bridge_socket = inject_with_retry(debug_port, script_path, server.port, service, export_service, runtime)
         return server, codex_proc
     except Exception:
         shutdown_helper(server)
@@ -257,13 +427,56 @@ def launch_and_inject(app_dir: Path | None, db_path: Path | None, backup_dir: Pa
         raise
 
 
-def handle_bridge_request(service: ApiFirstDeleteService, path: str, payload: dict[str, object]) -> dict[str, object]:
+def handle_bridge_request(
+    service: ApiFirstDeleteService,
+    export_service: MarkdownExportService,
+    path: str,
+    payload: dict[str, object],
+    runtime: CodexPlusRuntime | None = None,
+) -> dict[str, object]:
+    if path == "/settings/get" and runtime:
+        return SettingsStore().load().to_dict()
+    if path == "/settings/set" and runtime:
+        return SettingsStore().update(payload).to_dict()
+    if path == "/user-scripts/list" and runtime:
+        return runtime.user_scripts.inventory()
+    if path == "/user-scripts/set-enabled" and runtime:
+        runtime.user_scripts.set_global_enabled(bool(payload.get("enabled", True)))
+        return runtime.user_scripts.inventory()
+    if path == "/user-scripts/set-script-enabled" and runtime:
+        runtime.user_scripts.set_script_enabled(str(payload.get("key", "")), bool(payload.get("enabled", True)))
+        return runtime.user_scripts.inventory()
+    if path == "/user-scripts/reload" and runtime:
+        return runtime.reload_user_scripts()
+    if path == "/devtools/open" and runtime:
+        return runtime.open_devtools()
+    if path == "/backend/status" and runtime:
+        return runtime.backend_status()
+    if path == "/backend/repair" and runtime:
+        return runtime.repair_backend()
     if path == "/delete":
         session = SessionRef(session_id=str(payload.get("session_id", "")), title=str(payload.get("title", "")))
         return service.delete(session).to_dict()
     if path == "/undo":
         return service.undo(str(payload.get("undo_token", ""))).to_dict()
+    if path == "/export-markdown":
+        session = SessionRef(session_id=str(payload.get("session_id", "")), title=str(payload.get("title", "")))
+        return export_service.export(session).to_dict()
     if path == "/archived-thread":
         session = service.find_archived_thread_by_title(str(payload.get("title", "")))
         return {"session_id": session.session_id, "title": session.title} if session else {"session_id": "", "title": ""}
+    if path == "/move-thread-workspace":
+        session = SessionRef(session_id=str(payload.get("session_id", "")), title=str(payload.get("title", "")))
+        return service.move_thread_workspace(session, str(payload.get("target_cwd", "")))
+    if path == "/thread-sort-key":
+        session = SessionRef(session_id=str(payload.get("session_id", "")), title=str(payload.get("title", "")))
+        return service.thread_sort_key(session)
+    if path == "/thread-sort-keys":
+        raw_sessions = payload.get("sessions", [])
+        sessions = [
+            SessionRef(session_id=str(item.get("session_id", "")), title=str(item.get("title", "")))
+            for item in raw_sessions
+            if isinstance(item, dict)
+        ] if isinstance(raw_sessions, list) else []
+        return service.thread_sort_keys(sessions)
     return {"status": DeleteStatus.FAILED.value, "session_id": str(payload.get("session_id", "")), "message": "Unknown bridge path"}

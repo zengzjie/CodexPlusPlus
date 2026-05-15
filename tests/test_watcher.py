@@ -87,3 +87,47 @@ def test_wait_for_cdp_returns_true_when_listening(monkeypatch):
 def test_wait_for_cdp_returns_false_on_timeout(monkeypatch):
     monkeypatch.setattr(watcher, "cdp_listening", lambda port: False)
     assert watcher.wait_for_cdp(port=9229, timeout=0.3) is False
+
+
+def test_spawn_launcher_passes_debug_port(monkeypatch):
+    calls = []
+
+    class FakePopen:
+        pass
+
+    monkeypatch.setattr(watcher.subprocess, "Popen", lambda args, **kwargs: calls.append((args, kwargs)) or FakePopen())
+
+    assert watcher.spawn_launcher(debug_port=9333) is not None
+
+    args, _ = calls[0]
+    assert "--debug-port" in args
+    assert "9333" in args
+
+
+def test_takeover_skips_kill_when_cdp_appears(monkeypatch):
+    killed = []
+    stopped = []
+    monkeypatch.setattr(watcher, "cdp_listening", lambda port: True)
+    monkeypatch.setattr(watcher, "stop_launcher_processes", lambda: stopped.append(True))
+    monkeypatch.setattr(watcher, "kill_processes", lambda pids: killed.append(pids))
+
+    assert watcher.takeover(debug_port=9229) is True
+    assert stopped == []
+    assert killed == []
+
+
+def test_find_codex_processes_excludes_cli_commands(monkeypatch):
+    output = "\n".join(
+        [
+            "101\tC:\\Program Files\\WindowsApps\\OpenAI.Codex_1.2.3\\Codex.exe\t\"C:\\Program Files\\WindowsApps\\OpenAI.Codex_1.2.3\\Codex.exe\"",
+            "202\tC:\\Users\\User\\AppData\\Roaming\\npm\\codex.exe\t\"C:\\Users\\User\\AppData\\Roaming\\npm\\codex.exe\"",
+            "303\tC:\\Users\\User\\AppData\\Local\\Programs\\codex\\codex.exe\t\"C:\\Users\\User\\AppData\\Local\\Programs\\codex\\codex.exe\" --model opus",
+        ]
+    )
+    monkeypatch.setattr(watcher, "_run_powershell", lambda script: output)
+
+    assert watcher.find_codex_processes() == [101]
+
+
+def test_takeover_failure_backoff_is_not_too_short():
+    assert watcher.TAKEOVER_FAILURE_BACKOFF_SECONDS >= 30.0

@@ -1,17 +1,29 @@
 # Codex++
 
 <p align="center">
-  <img src="docs/images/codex-plus-plus.png" alt="Codex++ 图标" width="256">
+  <img src="docs/images/codex-plus-plus.png" alt="Codex++ 图标" width="160">
 </p>
 
-Codex++ 是一个面向 Codex App 的外部增强启动器。它不修改 Codex App 原始安装文件，而是通过外部 launcher 启动 Codex，并使用 Chromium DevTools Protocol 向渲染进程注入增强脚本。
+<p align="center">
+  中文 | <a href="README_EN.md">English</a>
+</p>
+
+<p align="center">
+  <img alt="Release" src="https://img.shields.io/github/v/release/BigPizzaV3/CodexPlusPlus">
+  <img alt="Stars" src="https://img.shields.io/github/stars/BigPizzaV3/CodexPlusPlus">
+  <img alt="License" src="https://img.shields.io/github/license/BigPizzaV3/CodexPlusPlus">
+  <img alt="Python" src="https://img.shields.io/badge/python-3.11%2B-blue">
+</p>
+
+Codex++ 是面向 Codex App 的外部增强启动器。它不修改 Codex App 原始安装文件，而是通过外部 launcher 启动 Codex，并使用 Chromium DevTools Protocol 注入增强脚本。
 
 ## 目录
 
-- [功能](#功能)
-- [痛点](#痛点)
-- [解决效果](#解决效果)
 - [讨论交流](#讨论交流)
+- [快速使用](#快速使用)
+- [功能亮点](#功能亮点)
+- [界面预览](#界面预览)
+- [Provider 同步](#provider-同步)
 - [友情链接](#友情链接)
 - [工作方式](#工作方式)
 - [环境要求](#环境要求)
@@ -19,55 +31,97 @@ Codex++ 是一个面向 Codex App 的外部增强启动器。它不修改 Codex 
   - [图形菜单安装/卸载](#图形菜单安装卸载)
   - [命令行安装](#命令行安装)
   - [命令行卸载](#命令行卸载)
+  - [Windows 自动接管（可选）](#windows-自动接管可选)
 - [自动更新](#自动更新)
 - [macOS 使用](#macos-使用)
-  - [安装](#安装)
-  - [卸载](#卸载)
 - [直接启动](#直接启动)
 - [数据与备份](#数据与备份)
 - [常见问题](#常见问题)
-
-## 功能
-
-当前功能：
-
-- 在会话列表悬停显示“删除”按钮
-- 删除前确认，支持撤销
-- 优先尝试服务端删除；不可用时删除本地 Codex SQLite 会话记录
-- 在顶部菜单栏加入 `Codex++` 菜单
-- 支持开关：
-  - 插件选项解锁
-  - 特殊插件强制安装
-  - 会话删除
-- 支持 Windows 快捷方式安装/卸载
-- 支持 macOS 生成 `/Applications/Codex++.app`
-- 支持基于 GitHub Release 检查和更新 Codex++
-
-## 痛点
-
-API Key 登录模式下，Codex 原生插件入口会提示需要登录 ChatGPT，导致插件功能无法正常使用：
-
-![API Key 模式下插件入口不可用](docs/images/pain-plugin-disabled.png)
-
-同时，Codex 原生会话列表只有归档入口，没有真正的删除按钮：
-
-![原生会话列表缺少删除能力](docs/images/pain-no-delete-button.png)
-
-## 解决效果
-
-Codex++ 启动后会解锁插件入口，并在会话列表悬停时显示删除按钮：
-
-![Codex++ 解锁插件入口并添加删除按钮](docs/images/solution-plugin-and-delete.png)
-
-顶部菜单栏会出现 `Codex++`，点击后可以打开配置界面：
-
-![Codex++ 配置界面](docs/images/settings-panel.png)
+- [贡献者与 Star](#贡献者与-star)
+- [开发](#开发)
 
 ## 讨论交流
 
 欢迎扫码加入 Codex++ 交流群，反馈问题、交流使用体验或提出新功能建议：
 
 <img src="docs/images/discussion-group-qr.jpg" alt="Codex++ 交流群二维码" width="260">
+
+## 快速使用
+
+Windows 用户可以直接双击项目根目录的：
+
+```text
+setup.bat
+```
+
+然后选择：
+
+```text
+[1] Install Codex++
+```
+
+安装后桌面会生成 `Codex++.lnk`，双击即可启动带增强功能的 Codex。
+
+也可以在项目目录通过命令行安装和启动：
+
+```bash
+python -m pip install -e .
+python -m codex_session_delete setup
+python -m codex_session_delete launch
+```
+
+macOS 用户可以执行：
+
+```bash
+python -m codex_session_delete setup
+```
+
+安装后会生成 `/Applications/Codex++.app`。
+
+## 功能亮点
+
+- 顶部菜单栏加入 `Codex++` 菜单，可集中管理增强功能。
+- 插件选项解锁：让 API Key 模式显示并启用插件入口。
+- 特殊插件强制安装：解除 App unavailable / 应用不可用导致的前端安装禁用。
+- 会话删除：在会话列表悬停显示删除按钮，删除前确认并支持撤销。
+- Markdown 导出：按本地 rollout 导出带时间戳的会话 Markdown。
+- 会话项目移动：把会话移动到普通对话或其他本地项目。
+- 对话 Timeline：在对话右侧显示用户提问时间线，悬停查看摘要并快速跳转。
+- Provider 同步：切换 model_provider 或供应商时不丢历史会话。
+- Windows 快捷方式安装/卸载、常驻 watcher 自动接管、GitHub Release 自动更新。
+- macOS 生成 `/Applications/Codex++.app`。
+
+## 界面预览
+
+API Key 登录模式下，Codex 原生插件入口会提示需要登录 ChatGPT，导致插件功能无法正常使用：
+
+![API Key 模式下插件入口不可用](docs/images/pain-plugin-disabled.png)
+
+Codex 原生会话列表只有归档入口，没有真正的删除按钮：
+
+![原生会话列表缺少删除能力](docs/images/pain-no-delete-button.png)
+
+Codex++ 启动后会解锁插件入口，并在会话列表悬停时显示删除按钮：
+
+![Codex++ 解锁插件入口并添加删除按钮](docs/images/solution-plugin-and-delete.png)
+
+顶部菜单栏会出现 `Codex++`，可以查看后端状态并打开设置面板：
+
+![Codex++ 后端状态指示灯](docs/images/backend-status-indicator.png)
+
+![Codex++ 设置面板](docs/images/settings-panel.png)
+
+## Provider 同步
+
+启用 `Provider 同步` 后，Codex++ 会在启动 Codex 前同步本地会话 metadata。它会把 rollout 文件、SQLite 线程记录和项目路径缓存同步到当前 `model_provider`，让你切换供应商时不丢历史会话。
+
+适合这些场景：
+
+- 从 OpenAI 切换到第三方 provider 后，旧会话在 Desktop 或 `/resume` 中不可见。
+- 切回其他 provider 后，希望历史对话继续出现在原项目下。
+- Windows 路径带有 `\\?\` 前缀导致 Desktop 项目列表匹配不到旧会话。
+
+同步只修复会话可见性相关 metadata，不改写对话内容；如果 Codex 正在占用某个会话文件或 SQLite 忙碌，Codex++ 会跳过并继续启动，避免阻塞 Codex。
 
 ## 友情链接
 
@@ -80,9 +134,11 @@ Codex++ 使用外部启动方式运行 Codex：
 1. 启动 Codex App，并附加：
    - `--remote-debugging-port=9229`
    - `--remote-allow-origins=http://127.0.0.1:9229`
-2. 启动本地 helper 服务，用于删除/撤销会话。
-3. 通过 CDP 注入 `renderer-inject.js`。
-4. 渲染端通过 CDP bridge 与本地 helper 通信，避免被 Codex 页面 CSP 拦截。
+2. 如果启用了 Provider 同步，启动 Codex 前先同步历史会话 metadata。
+3. 启动本地 helper 服务，保留健康检查和运行生命周期。
+4. 通过 CDP 注入 `renderer-inject.js`。
+5. 渲染端通过 CDP bridge 调用本地服务；默认不开放 HTTP 删除/撤销入口，避免本机其他页面误触发删除类操作。
+6. 启动 Codex 时继承现有 `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`；如果这些环境变量未设置，会自动探测常见本地代理端口（如 `127.0.0.1:7897`），帮助 Codex 加载需要访问 GitHub 的技能资源。
 
 这种方式不会修改 Codex 的 `app.asar`，也不需要往 Codex 安装目录写 DLL。
 
@@ -154,6 +210,37 @@ python -m codex_session_delete remove
 
 ```bash
 python -m codex_session_delete remove --remove-data
+```
+
+### Windows 自动接管（可选）
+
+默认情况下 Codex++ 只在你从 `Codex++` 快捷方式启动时生效。如果你从开始菜单、任务栏或系统原生入口直接启动 Codex，那一次不会有注入，`Codex++` 菜单和插件解锁都不会出现。
+
+Windows 可以注册一个常驻 watcher 解决这个问题。它会每 3 秒探测一次本机 CDP 端口，发现 Codex 在跑但 CDP 没起来，会先短暂等待并二次确认，确认仍没有 CDP 后再把 Codex Desktop App 进程重拉为带注入的版本。
+
+安装：
+
+```bash
+python -m codex_session_delete watch-install
+```
+
+卸载：
+
+```bash
+python -m codex_session_delete watch-remove
+```
+
+临时开关：
+
+```bash
+python -m codex_session_delete watch-disable
+python -m codex_session_delete watch-enable
+```
+
+日志：
+
+```text
+%USERPROFILE%\.codex-session-delete\watcher.log
 ```
 
 ## 自动更新
@@ -248,61 +335,16 @@ Codex++ 默认读取 Codex 本地数据库：
 ~/.codex-session-delete/backups
 ```
 
+Provider 同步会把同步前状态备份到：
+
+```text
+~/.codex/backups_state/provider-sync
+```
+
 隐藏启动失败日志位于：
 
 ```text
 ~/.codex-session-delete/launcher.log
-```
-
-## Windows 自动接管（可选）
-
-默认情况下 Codex++ 只在你**从 `Codex++` 快捷方式启动时**生效。如果你从开始菜单、任务栏或系统原生入口直接启动 Codex，那一次不会有注入，`Codex++` 菜单和插件解锁都不会出现。
-
-Windows 可以注册一个常驻 watcher 解决这个问题。它会每 3 秒探测一次本机 CDP 端口，发现 Codex 在跑但 CDP 没起来，就把这一批 Codex 进程杀掉、通过 launcher 重拉一次带注入的版本。这样不管你从哪里打开 Codex，都会被自动接管。
-
-注意代价：
-
-- 每次 Codex 通过原生路径启动，都会先打开一瞬间，再被 kill，再被 launcher 带 CDP 重开。视觉上是 1 ~ 2 秒的“打开→关闭→重开”闪烁。
-- watcher 以 `pythonw.exe` 常驻运行，登录时自动启动（通过 `HKCU\...\Run` 和 Startup 文件夹双路径注册，后者防止某些注册表清理工具干扰）。
-
-### 安装
-
-```bash
-python -m codex_session_delete watch-install
-```
-
-安装完成后 watcher 会立即启动，无需重启。
-
-### 卸载
-
-```bash
-python -m codex_session_delete watch-remove
-```
-
-`remove` / 系统卸载 Codex++ 时会自动连带执行 `watch-remove`，不需要手动处理。
-
-### 临时开关
-
-保留自启项、但让 watcher 不再自动接管：
-
-```bash
-python -m codex_session_delete watch-disable
-python -m codex_session_delete watch-enable
-```
-
-### 日志
-
-```text
-%USERPROFILE%\.codex-session-delete\watcher.log
-```
-
-示例：
-
-```text
-[...] watcher started (interval=3.0s)
-[...] Codex running without CDP (pids=[...]); attempting takeover
-[...] takeover: killing 4 codex pid(s): [...]
-[...] takeover: CDP is up on 9229 (launcher pid=...)
 ```
 
 ## 常见问题
@@ -321,6 +363,16 @@ python -m codex_session_delete watch-enable
 - 9229 端口被占用
 - Python 环境不可用
 
+### 技能推荐加载失败
+
+如果技能页提示 `git fetch failed`、`unable to access 'https://github.com/openai/skills.git/'` 或无法连接 GitHub，通常是本机网络不能直连 GitHub。Codex++ 启动时会优先继承现有代理环境变量；如果未设置，会自动探测常见本地代理端口。也可以手动指定：
+
+```powershell
+$env:HTTP_PROXY="http://127.0.0.1:7897"
+$env:HTTPS_PROXY="http://127.0.0.1:7897"
+python -m codex_session_delete launch
+```
+
 ### Codex++ 菜单没出现
 
 确认是从 `Codex++` 快捷方式启动，而不是直接启动原版 Codex。
@@ -331,6 +383,10 @@ python -m codex_session_delete watch-enable
 --remote-debugging-port=9229
 ```
 
+### 切换供应商后旧会话不见了
+
+打开 `Codex++` 设置面板，启用 `Provider 同步` 后重新启动 Codex++。它会在启动 Codex 前同步当前 `model_provider`，让历史会话重新匹配当前供应商。
+
 ### Windows 系统卸载失败
 
 请先更新到当前版本后重新安装一次：
@@ -340,6 +396,18 @@ python -m codex_session_delete setup
 ```
 
 新版会写入稳定的系统卸载项，并使用绝对 Python 路径执行卸载。
+
+## 贡献者与 Star
+
+<a href="https://github.com/BigPizzaV3/CodexPlusPlus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=BigPizzaV3/CodexPlusPlus" alt="Codex++ contributors">
+</a>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BigPizzaV3/CodexPlusPlus&type=Date&theme=dark">
+  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=BigPizzaV3/CodexPlusPlus&type=Date">
+  <img alt="Codex++ Star History" src="https://api.star-history.com/svg?repos=BigPizzaV3/CodexPlusPlus&type=Date">
+</picture>
 
 ## 开发
 
@@ -358,6 +426,8 @@ codex_session_delete/
   cdp.py                 CDP 通信与 bridge
   helper_server.py       本地 helper 服务
   storage_adapter.py     本地 SQLite 删除/撤销
+  provider_sync.py       Provider 同步
+  settings_store.py      Codex++ 后端设置
   windows_installer.py   Windows 快捷方式与卸载项
   macos_installer.py     macOS app bundle 安装
   watcher.py             Windows 常驻 watcher（可选，原生启动接管）

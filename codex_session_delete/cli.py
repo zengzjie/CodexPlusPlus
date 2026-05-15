@@ -103,11 +103,9 @@ def wait_for_shutdown(server: HelperServer, codex_proc) -> None:
         if isinstance(codex_proc, int):
             wait_for_windows_process_id(codex_proc)
         elif codex_proc is None and sys.platform == "darwin":
-            import subprocess as _sp
             import time as _time
             while True:
-                result = _sp.run(["pgrep", "-f", "^/Applications/Codex\\.app/Contents/MacOS/Codex"], capture_output=True)
-                if result.returncode != 0:
+                if not is_macos_codex_running():
                     break
                 _time.sleep(2)
         elif codex_proc is not None:
@@ -118,17 +116,33 @@ def wait_for_shutdown(server: HelperServer, codex_proc) -> None:
         shutdown_helper(server)
 
 
+def is_macos_codex_running() -> bool:
+    result = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True, check=False)
+    return any("/Codex.app/Contents/MacOS/Codex " in f"{line} " for line in result.stdout.splitlines())
+
+
 def stop_existing_windows_launchers() -> None:
     if sys.platform != "win32":
         return
-    current_pid = os.getpid()
+    # Protect our own process AND every ancestor up the chain. venv's python.exe
+    # is a stub that re-spawns a second python.exe child (same CommandLine), and
+    # shells/bash also carry launcher command lines in their ancestry. Killing
+    # any of them (e.g. the stub parent) tears down stdio for the real worker
+    # and aborts the launch before Codex is activated.
     script = (
+        "$self = [int]$env:CODEX_PLUS_PLUS_PID; "
+        "$protect = New-Object System.Collections.Generic.HashSet[int]; "
+        "$cur = $self; "
+        "while ($cur -ne 0 -and $protect.Add($cur)) { "
+        "$p = Get-CimInstance Win32_Process -Filter \"ProcessId=$cur\" -ErrorAction SilentlyContinue; "
+        "if ($null -eq $p) { break }; $cur = [int]$p.ParentProcessId "
+        "} "
         "Get-CimInstance Win32_Process | "
-        "Where-Object { $_.ProcessId -ne $env:CODEX_PLUS_PLUS_PID -and "
-        "$_.CommandLine -match 'pythonw?(.exe)?\"?\\s+-m\\s+codex_session_delete\\s+launch(\\s|$)' } | "
-        "ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"
+        "Where-Object { -not $protect.Contains([int]$_.ProcessId) -and "
+        "$_.CommandLine -match 'pythonw?(\\.exe)?\"?\\s+(-[A-Za-z]+\\s+)*-m\\s+codex_session_delete\\s+launch(\\s|$)' } | "
+        "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
     )
-    env = {**os.environ, "CODEX_PLUS_PLUS_PID": str(current_pid)}
+    env = {**os.environ, "CODEX_PLUS_PLUS_PID": str(os.getpid())}
     subprocess.run(["powershell", "-NoProfile", "-Command", script], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
 
 
