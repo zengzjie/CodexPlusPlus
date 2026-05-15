@@ -550,9 +550,11 @@ def test_renderer_script_includes_user_script_manager_ui_contract():
     assert "function headerTitleRegion" in text
     assert "function headerTitleRegion" in text
     assert "function isHeaderToolbarButton" in text
-    assert 'button.closest(".ms-auto.flex.shrink-0.items-center")' in text
+    assert "const headerRect = header?.getBoundingClientRect?.();" in text
+    assert "const topBandBottom = headerRect.top + Math.min(56, headerRect.height || 0);" in text
+    assert "const rightThreshold = Math.max(window.innerWidth / 2, titleRect?.right || 0);" in text
     assert "const titleRegion = headerTitleRegion(header);" in text
-    assert "if (titleRegion?.contains?.(button)) return false;" in text
+    assert "const titleRect = titleRegion?.getBoundingClientRect?.() || null;" in text
     assert ".map((button) => ({ button, rect: button.getBoundingClientRect() }))" in text
     assert ".filter(({ button, rect }) => isHeaderToolbarButton(button, header, rect))" in text
 
@@ -656,3 +658,32 @@ def test_renderer_script_can_move_sidebar_threads_between_projects():
     assert "openProjectMoveMenuForRow" in text
     assert "existingMoveButton" in text
     assert "普通对话" in text
+
+
+def test_renderer_script_anchors_floating_menu_to_top_header_band_buttons():
+    text = Path("codex_session_delete/inject/renderer-inject.js").read_text(encoding="utf-8")
+    style_start = text.index(f"#${{codexPlusMenuId}}.${{codexPlusMenuFloatingClass}}")
+    style_end = text.index(".codex-plus-trigger", style_start)
+    menu_style = text[style_start:style_end]
+    insertion_start = text.index("function findNativeMenuInsertionPoint")
+    insertion_end = text.index("\n\n  function removeDuplicateCodexPlusMenus", insertion_start)
+    insertion_code = text[insertion_start:insertion_end]
+    toolbar_start = text.index("function isHeaderToolbarButton")
+    toolbar_end = text.index("\n\n  function updateFloatingCodexPlusMenuPosition", toolbar_start)
+    toolbar_code = text[toolbar_start:toolbar_end]
+
+    assert "pointer-events: none;" in menu_style
+    assert f"#${{codexPlusMenuId}} > button" in menu_style
+    assert "position: static !important;" in menu_style
+    assert "flex: 0 0 auto !important;" in menu_style
+    assert "width: auto !important;" in menu_style
+    assert "pointer-events: auto;" in menu_style
+    assert 'document.querySelector("header")' in insertion_code
+    assert "header.querySelectorAll(selectors.nativeMenuBar)" in insertion_code
+    assert "rect.right < window.innerWidth / 2" in insertion_code
+    assert "const headerRect = header?.getBoundingClientRect?.();" in toolbar_code
+    assert "const titleRect = titleRegion?.getBoundingClientRect?.() || null;" in toolbar_code
+    assert "const topBandBottom = headerRect.top + Math.min(56, headerRect.height || 0);" in toolbar_code
+    assert "rect.top + rect.height / 2 > topBandBottom" in toolbar_code
+    assert "const rightThreshold = Math.max(window.innerWidth / 2, titleRect?.right || 0);" in toolbar_code
+    assert "rect.left < rightThreshold" in toolbar_code

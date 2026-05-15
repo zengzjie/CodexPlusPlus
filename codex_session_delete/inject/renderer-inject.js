@@ -92,7 +92,6 @@
       }
       .${actionButtonClass},
       .codex-archive-row-button {
-        border: 1px solid #ef4444;
         border-radius: 6px;
         background: #f3f4f6;
         color: #374151;
@@ -102,7 +101,6 @@
         cursor: pointer;
       }
       .codex-archive-row-button {
-        border-radius: 7px;
         font: 12px system-ui, sans-serif;
         line-height: 16px;
         padding: 3px 8px;
@@ -120,14 +118,22 @@
         box-sizing: border-box;
       }
       .${buttonClass},
-      .codex-archive-row-button.${buttonClass} {
+      .codex-archive-row-button .codex-archive-delete-button {
+        padding: 1px 6px;
+        border: 0;
         background: #fde8e8;
-        color: #d04a3f;
+        color: #cf1322;
+        font-size: 12px;
+        font-weight: 500;
       }
       .${exportButtonClass},
-      .codex-archive-row-button.${exportButtonClass} {
+      .codex-archive-row-button .codex-archive-export-button {
+        padding: 1px 6px;
+        border: 0;
         background: #dbeafe;
         color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 500;
       }
       .${projectMoveButtonClass} {
         background: #d1fae5;
@@ -174,14 +180,24 @@
       .codex-project-move-empty { padding: 18px 12px; color: #6b7280; text-align: center; }
       .codex-project-move-hidden { display: none !important; }
       [data-codex-project-move-injected-list="true"] { display: flex; flex-direction: column; }
-      .codex-archive-delete-all {
-        border: 1px solid #ef4444;
-        border-radius: 7px;
-        background: #fee2e2;
-        color: #991b1b;
+      .codex-archive-export-all {
+        border-radius: 5px;
+        background: #dbeafe;
+        color: #1d4ed8;
         font: 12px system-ui, sans-serif;
+        font-weight: 500;
         line-height: 16px;
-        padding: 3px 8px;
+        padding: 6px 8px;
+        cursor: pointer;
+      }
+      .codex-archive-delete-all {
+        border-radius: 5px;
+        background: #fee2e2;
+        color: #cf1322;
+        font: 12px system-ui, sans-serif;
+        font-weight: 500;
+        line-height: 16px;
+        padding: 6px 8px;
         cursor: pointer;
       }
       .codex-archive-action-bar {
@@ -259,7 +275,9 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        pointer-events: auto;
+        width: max-content;
+        max-width: max-content;
+        pointer-events: none;
         -webkit-app-region: no-drag;
       }
       #${codexPlusMenuId} {
@@ -267,8 +285,20 @@
         align-items: center;
         height: 100%;
         flex: 0 0 auto;
-        pointer-events: auto;
+        width: max-content;
+        max-width: max-content;
+        pointer-events: none;
         -webkit-app-region: no-drag;
+      }
+      #${codexPlusMenuId} > button {
+        position: static !important;
+        inset: auto !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: max-content !important;
+        white-space: nowrap;
+        pointer-events: auto;
       }
       .codex-plus-trigger {
         display: inline-flex;
@@ -947,8 +977,21 @@
 
   function findNativeMenuInsertionPoint() {
     if (!codexPlusSettings().nativeMenuPlacement) return null;
-    const header = document.querySelector(selectors.appHeader);
-    const menuBar = header?.querySelector(selectors.nativeMenuBar);
+    const header =
+      document.querySelector(selectors.appHeader) ||
+      document.querySelector("header");
+    const headerRect = header?.getBoundingClientRect?.();
+    if (!headerRect?.height) return null;
+    const topBandBottom = headerRect.top + Math.min(56, headerRect.height || 0);
+    const menuBar = Array.from(
+      header.querySelectorAll(selectors.nativeMenuBar),
+    ).find((candidate) => {
+      const rect = candidate.getBoundingClientRect?.();
+      if (!rect?.width || !rect?.height) return false;
+      if (rect.top + rect.height / 2 > topBandBottom) return false;
+      if (rect.right < window.innerWidth / 2) return false;
+      return candidate.querySelector?.("button");
+    });
     if (!menuBar) return null;
     const buttons = Array.from(menuBar.querySelectorAll("button")).filter(
       (button) => !button.closest(`#${codexPlusMenuId}`),
@@ -1023,17 +1066,20 @@
 
   function isHeaderToolbarButton(button, header, rect) {
     if (!button || button.closest?.(`#${codexPlusMenuId}`)) return false;
-    if (
-      !(rect.width > 0 && rect.height > 0 && rect.left > window.innerWidth / 2)
-    )
-      return false;
-    const buttonCluster = button.closest(".ms-auto.flex.shrink-0.items-center");
-    if (buttonCluster && header?.contains(buttonCluster)) return true;
+    if (!(rect.width > 0 && rect.height > 0)) return false;
+    const headerRect = header?.getBoundingClientRect?.();
+    if (!headerRect?.height) return false;
     const titleRegion = headerTitleRegion(header);
     if (titleRegion?.contains?.(button)) return false;
-    return !!button.closest?.(
-      '[class*="ms-auto"][class*="shrink-0"][class*="items-center"]',
+    const titleRect = titleRegion?.getBoundingClientRect?.() || null;
+    const topBandBottom = headerRect.top + Math.min(56, headerRect.height || 0);
+    if (rect.top + rect.height / 2 > topBandBottom) return false;
+    const rightThreshold = Math.max(
+      window.innerWidth / 2,
+      titleRect?.right || 0,
     );
+    if (rect.left < rightThreshold) return false;
+    return true;
   }
 
   function updateFloatingCodexPlusMenuPosition(menu) {
@@ -3094,7 +3140,7 @@
     if (settings.projectMove) {
       const moveButton = document.createElement("button");
       moveButton.type = "button";
-      moveButton.className = `${actionButtonClass} ${baseBtnClass} ${projectMoveButtonClass}`;
+      moveButton.className = `${baseBtnClass} ${projectMoveButtonClass}`;
       moveButton.dataset.codexProjectMoveVersion = codexProjectMoveVersion;
       moveButton.textContent = "移动";
       const openProjectMove = (event) =>
@@ -3109,7 +3155,7 @@
     if (settings.markdownExport) {
       const exportButton = document.createElement("button");
       exportButton.type = "button";
-      exportButton.className = `${actionButtonClass} ${baseBtnClass} ${exportButtonClass}`;
+      exportButton.className = `${baseBtnClass} ${exportButtonClass}`;
       exportButton.dataset.codexExportVersion = codexExportVersion;
       exportButton.textContent = "导出";
       const openExport = (event) => {
@@ -3123,7 +3169,7 @@
     if (settings.sessionDelete) {
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
-      deleteButton.className = `${actionButtonClass} ${baseBtnClass} ${buttonClass}`;
+      deleteButton.className = `${baseBtnClass} ${buttonClass}`;
       deleteButton.dataset.codexDeleteVersion = codexDeleteVersion;
       deleteButton.textContent = "删除";
       const openDeleteConfirm = (event) =>
@@ -3263,7 +3309,7 @@
     if (settings.markdownExport) {
       const exportButton = document.createElement("button");
       exportButton.type = "button";
-      exportButton.className = `codex-archive-delete-all codex-archive-row-button ${exportButtonClass}`;
+      exportButton.className = `codex-archive-export-all codex-archive-row-button codex-archive-export-button`;
       exportButton.dataset.codexArchiveRowAction = "export";
       exportButton.textContent = "导出";
       ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach(
@@ -3294,7 +3340,7 @@
     if (settings.sessionDelete) {
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
-      deleteButton.className = `codex-archive-delete-all codex-archive-row-button ${buttonClass}`;
+      deleteButton.className = `codex-archive-delete-all codex-archive-row-button codex-archive-delete-button`;
       deleteButton.dataset.codexArchiveRowAction = "delete";
       deleteButton.textContent = "删除";
       ["pointerdown", "mousedown", "mouseup", "touchstart"].forEach(
@@ -3579,7 +3625,7 @@
   }
 
   function scrollTimelineTarget(node, behavior = "smooth") {
-    if (!node?.isConnected) return false; 
+    if (!node?.isConnected) return false;
     node.scrollIntoView({
       block: "center",
       inline: "center",
